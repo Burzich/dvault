@@ -9,14 +9,16 @@ import (
 )
 
 type Server struct {
-	server http.Server
+	server  http.Server
+	handler DVaultHandler
 }
 
-func NewServer(addr string) *Server {
+func NewServer(addr string, handler DVaultHandler) *Server {
 	srv := &Server{
 		server: http.Server{
 			Addr: addr,
 		},
+		handler: handler,
 	}
 
 	r := chi.NewMux()
@@ -35,23 +37,23 @@ func NewServer(addr string) *Server {
 	r.Handle("/pprof/allocs", pprof.Handler("allocs"))
 
 	r.Route("/kv", func(r chi.Router) {
-		r.Get("/config", nil)
-		r.Post("/config", nil)
+		r.Get("/config", handler.GetKVConfig)
+		r.Post("/config", handler.CreateKVConfig)
 
-		r.Get("/data/{path}", nil)
-		r.Post("/data/{path}", nil)
-		r.Delete("/data/{path}", nil)
+		r.Get("/data/{path}", handler.GetKVSecret)
+		r.Post("/data/{path}", handler.CreateKVSecret)
+		r.Delete("/data/{path}", handler.DeleteKVSecret)
 
-		r.Post("/delete/{key}", nil)
-		r.Post("/destroy/{key}", nil)
+		r.Post("/delete/{key}", handler.DeleteKV)
+		r.Post("/destroy/{key}", handler.DestroyKV)
 
-		r.Get("/metadata/{path}", nil)
-		r.Post("/metadata/{path}", nil)
-		r.Delete("/metadata/{path}", nil)
+		r.Get("/metadata/{path}", handler.GetKVMetadata)
+		r.Post("/metadata/{path}", handler.CreateKVMetadata)
+		r.Delete("/metadata/{path}", handler.DeleteKVMetadata)
 		r.Get("/metadata/{path}/", nil)
 
-		r.Get("/subkeys/{path}", nil)
-		r.Post("/subkeys/{path}", nil)
+		r.Get("/subkeys/{path}", handler.GetKVSubkeys)
+		r.Post("/subkeys/{path}", handler.CreateKVSubkeys)
 	})
 
 	r.Route("/auth/token", func(r chi.Router) {
