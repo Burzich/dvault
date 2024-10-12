@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	cfg, err := config.ReadEnv()
+	cfg, err := config.Default()
 	if err != nil {
 		log.Fatal(err)
 	}
