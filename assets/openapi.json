@@ -1,0 +1,6106 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "HashiCorp Vault API",
+    "description": "HTTP API that gives you full access to Vault. All API routes are prefixed with `/v1/`.",
+    "version": "1.18.0",
+    "license": {
+      "name": "Mozilla Public License 2.0",
+      "url": "https://www.mozilla.org/en-US/MPL/2.0"
+    }
+  },
+  "paths": {
+    "/auth/token/accessors/": {
+      "description": "List token accessors, which can then be be used to iterate and discover their properties or revoke them. Because this can be used to cause a denial of service, this endpoint requires 'sudo' capability in addition to 'list'.",
+      "x-vault-sudo": true,
+      "get": {
+        "summary": "List token accessors, which can then be\nbe used to iterate and discover their properties\nor revoke them. Because this can be used to\ncause a denial of service, this endpoint\nrequires 'sudo' capability in addition to\n'list'.",
+        "operationId": "token-list-accessors",
+        "tags": [
+          "auth"
+        ],
+        "parameters": [
+          {
+            "name": "list",
+            "description": "Must be set to `true`",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true"
+              ]
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/token/create": {
+      "description": "The token create path is used to create new tokens.",
+      "post": {
+        "summary": "The token create path is used to create new tokens.",
+        "operationId": "token-create",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/token/create-orphan": {
+      "description": "The token create path is used to create new orphan tokens.",
+      "post": {
+        "summary": "The token create path is used to create new orphan tokens.",
+        "operationId": "token-create-orphan",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenCreateOrphanRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/token/create/{role_name}": {
+      "description": "This token create path is used to create new tokens adhering to the given role.",
+      "parameters": [
+        {
+          "name": "role_name",
+          "description": "Name of the role",
+          "in": "path",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "post": {
+        "summary": "This token create path is used to create new tokens adhering to the given role.",
+        "operationId": "token-create-against-role",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenCreateAgainstRoleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/token/lookup": {
+      "description": "This endpoint will lookup a token and its properties.",
+      "get": {
+        "operationId": "token-look-up-2",
+        "tags": [
+          "auth"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "description": "Token to lookup",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "token-look-up",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenLookUpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/token/lookup-accessor": {
+      "description": "This endpoint will lookup a token associated with the given accessor and its properties. Response will not contain the token ID.",
+      "post": {
+        "summary": "This endpoint will lookup a token associated with the given accessor and its properties. Response will not contain the token ID.",
+        "operationId": "token-look-up-accessor",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenLookUpAccessorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/token/lookup-self": {
+      "description": "This endpoint will lookup a token and its properties.",
+      "get": {
+        "operationId": "token-look-up-self",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "token-look-up-self2",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenLookUpSelf2Request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/token/renew": {
+      "description": "This endpoint will renew the given token and prevent expiration.",
+      "post": {
+        "summary": "This endpoint will renew the given token and prevent expiration.",
+        "operationId": "token-renew",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRenewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/token/renew-accessor": {
+      "description": "This endpoint will renew a token associated with the given accessor and its properties. Response will not contain the token ID.",
+      "post": {
+        "summary": "This endpoint will renew a token associated with the given accessor and its properties. Response will not contain the token ID.",
+        "operationId": "token-renew-accessor",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRenewAccessorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/token/renew-self": {
+      "description": "This endpoint will renew the token used to call it and prevent expiration.",
+      "post": {
+        "summary": "This endpoint will renew the token used to call it and prevent expiration.",
+        "operationId": "token-renew-self",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRenewSelfRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/token/revoke": {
+      "description": "This endpoint will delete the given token and all of its child tokens.",
+      "post": {
+        "summary": "This endpoint will delete the given token and all of its child tokens.",
+        "operationId": "token-revoke",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRevokeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/token/revoke-accessor": {
+      "description": "This endpoint will delete the token associated with the accessor and all of its child tokens.",
+      "post": {
+        "summary": "This endpoint will delete the token associated with the accessor and all of its child tokens.",
+        "operationId": "token-revoke-accessor",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRevokeAccessorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/token/revoke-orphan": {
+      "description": "This endpoint will delete the token and orphan its child tokens.",
+      "x-vault-sudo": true,
+      "post": {
+        "summary": "This endpoint will delete the token and orphan its child tokens.",
+        "operationId": "token-revoke-orphan",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRevokeOrphanRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/token/revoke-self": {
+      "description": "This endpoint will delete the token used to call it and all of its child tokens.",
+      "post": {
+        "summary": "This endpoint will delete the token used to call it and all of its child tokens.",
+        "operationId": "token-revoke-self",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/token/roles/": {
+      "description": "This endpoint lists configured roles.",
+      "get": {
+        "summary": "This endpoint lists configured roles.",
+        "operationId": "token-list-roles",
+        "tags": [
+          "auth"
+        ],
+        "parameters": [
+          {
+            "name": "list",
+            "description": "Must be set to `true`",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true"
+              ]
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/token/roles/{role_name}": {
+      "parameters": [
+        {
+          "name": "role_name",
+          "description": "Name of the role",
+          "in": "path",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "x-vault-createSupported": true,
+      "get": {
+        "operationId": "token-read-role",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "token-write-role",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenWriteRoleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "token-delete-role",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "204": {
+            "description": "empty body"
+          }
+        }
+      }
+    },
+    "/secret/^.*$": {},
+    "/secret/config": {
+      "description": "Configures settings for the KV store",
+      "get": {
+        "summary": "Read the backend level settings.",
+        "operationId": "kv-v2-read-configuration",
+        "tags": [
+          "secrets"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KvV2ReadConfigurationResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Configure backend level settings that are applied to every key in the key-value store.",
+        "operationId": "kv-v2-configure",
+        "tags": [
+          "secrets"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KvV2ConfigureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/secret/data/{path}": {
+      "description": "Write, Patch, Read, and Delete data in the Key-Value Store.",
+      "parameters": [
+        {
+          "name": "path",
+          "description": "Location of the secret.",
+          "in": "path",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "x-vault-createSupported": true,
+      "get": {
+        "operationId": "kv-v2-read",
+        "tags": [
+          "secrets"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KvV2ReadResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "kv-v2-write",
+        "tags": [
+          "secrets"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KvV2WriteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KvV2WriteResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "kv-v2-delete",
+        "tags": [
+          "secrets"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/secret/delete/{path}": {
+      "description": "Marks one or more versions as deleted in the KV store.",
+      "parameters": [
+        {
+          "name": "path",
+          "description": "Location of the secret.",
+          "in": "path",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "post": {
+        "operationId": "kv-v2-delete-versions",
+        "tags": [
+          "secrets"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KvV2DeleteVersionsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/secret/destroy/{path}": {
+      "description": "Permanently removes one or more versions in the KV store",
+      "parameters": [
+        {
+          "name": "path",
+          "description": "Location of the secret.",
+          "in": "path",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "post": {
+        "operationId": "kv-v2-destroy-versions",
+        "tags": [
+          "secrets"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KvV2DestroyVersionsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/secret/metadata/{path}": {
+      "description": "Configures settings for the KV store",
+      "parameters": [
+        {
+          "name": "path",
+          "description": "Location of the secret.",
+          "in": "path",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "x-vault-createSupported": true,
+      "get": {
+        "operationId": "kv-v2-read-metadata",
+        "tags": [
+          "secrets"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KvV2ReadMetadataResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "kv-v2-write-metadata",
+        "tags": [
+          "secrets"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KvV2WriteMetadataRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "kv-v2-delete-metadata-and-all-versions",
+        "tags": [
+          "secrets"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/secret/metadata/{path}/": {
+      "description": "Configures settings for the KV store",
+      "parameters": [
+        {
+          "name": "path",
+          "description": "Location of the secret.",
+          "in": "path",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "get": {
+        "operationId": "kv-v2-list",
+        "tags": [
+          "secrets"
+        ],
+        "parameters": [
+          {
+            "name": "list",
+            "description": "Must be set to `true`",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true"
+              ]
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/secret/subkeys/{path}": {
+      "description": "Read the structure of a secret entry from the Key-Value store with the values removed.",
+      "parameters": [
+        {
+          "name": "path",
+          "description": "Location of the secret.",
+          "in": "path",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "get": {
+        "operationId": "kv-v2-read-subkeys",
+        "tags": [
+          "secrets"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KvV2ReadSubkeysResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/secret/undelete/{path}": {
+      "description": "Undeletes one or more versions from the KV store.",
+      "parameters": [
+        {
+          "name": "path",
+          "description": "Location of the secret.",
+          "in": "path",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "post": {
+        "operationId": "kv-v2-undelete-versions",
+        "tags": [
+          "secrets"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KvV2UndeleteVersionsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/sys/auth": {
+      "description": "List the currently enabled credential backends.",
+      "get": {
+        "operationId": "auth-list-enabled-methods",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/auth/{path}": {
+      "description": "Enable a new credential backend with a name.",
+      "parameters": [
+        {
+          "name": "path",
+          "description": "The path to mount to. Cannot be delimited. Example: \"user\"",
+          "in": "path",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "x-vault-sudo": true,
+      "get": {
+        "summary": "Read the configuration of the auth engine at the given path.",
+        "operationId": "auth-read-configuration",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthReadConfigurationResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Enables a new auth method.",
+        "description": "After enabling, the auth method can be accessed and configured via the auth path specified as part of the URL. This auth path will be nested under the auth prefix.\n\nFor example, enable the \"foo\" auth method will make it accessible at /auth/foo.",
+        "operationId": "auth-enable-method",
+        "tags": [
+          "system"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthEnableMethodRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Disable the auth method at the given auth path",
+        "operationId": "auth-disable-method",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/decode-token": {
+      "x-vault-unauthenticated": true,
+      "post": {
+        "summary": "Decodes the encoded token with the otp.",
+        "operationId": "decode-token",
+        "tags": [
+          "system"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecodeTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/health": {
+      "description": "Checks the health status of the Vault.",
+      "x-vault-unauthenticated": true,
+      "get": {
+        "summary": "Returns the health status of Vault.",
+        "operationId": "read-health-status",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "initialized, unsealed, and active"
+          },
+          "429": {
+            "description": "unsealed and standby"
+          },
+          "472": {
+            "description": "data recovery mode replication secondary and active"
+          },
+          "501": {
+            "description": "not initialized"
+          },
+          "503": {
+            "description": "sealed"
+          }
+        }
+      }
+    },
+    "/sys/host-info": {
+      "description": "Information about the host instance that this Vault server is running on.",
+      "get": {
+        "summary": "Information about the host instance that this Vault server is running on.",
+        "description": "Information about the host instance that this Vault server is running on.\n\t\tThe information that gets collected includes host hardware information, and CPU,\n\t\tdisk, and memory utilization",
+        "operationId": "collect-host-information",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectHostInformationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sys/pprof": {
+      "get": {
+        "summary": "Returns an HTML page listing the available profiles.",
+        "description": "Returns an HTML page listing the available \nprofiles. This should be mainly accessed via browsers or applications that can \nrender pages.",
+        "operationId": "pprof-index",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/pprof/allocs": {
+      "get": {
+        "summary": "Returns a sampling of all past memory allocations.",
+        "description": "Returns a sampling of all past memory allocations.",
+        "operationId": "pprof-memory-allocations",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/pprof/block": {
+      "get": {
+        "summary": "Returns stack traces that led to blocking on synchronization primitives",
+        "description": "Returns stack traces that led to blocking on synchronization primitives",
+        "operationId": "pprof-blocking",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/pprof/cmdline": {
+      "get": {
+        "summary": "Returns the running program's command line.",
+        "description": "Returns the running program's command line, with arguments separated by NUL bytes.",
+        "operationId": "pprof-command-line",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/pprof/goroutine": {
+      "get": {
+        "summary": "Returns stack traces of all current goroutines.",
+        "description": "Returns stack traces of all current goroutines.",
+        "operationId": "pprof-goroutines",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/pprof/heap": {
+      "get": {
+        "summary": "Returns a sampling of memory allocations of live object.",
+        "description": "Returns a sampling of memory allocations of live object.",
+        "operationId": "pprof-memory-allocations-live",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/pprof/mutex": {
+      "get": {
+        "summary": "Returns stack traces of holders of contended mutexes",
+        "description": "Returns stack traces of holders of contended mutexes",
+        "operationId": "pprof-mutexes",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/pprof/profile": {
+      "get": {
+        "summary": "Returns a pprof-formatted cpu profile payload.",
+        "description": "Returns a pprof-formatted cpu profile payload. Profiling lasts for duration specified in seconds GET parameter, or for 30 seconds if not specified.",
+        "operationId": "pprof-cpu-profile",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/pprof/symbol": {
+      "get": {
+        "summary": "Returns the program counters listed in the request.",
+        "description": "Returns the program counters listed in the request.",
+        "operationId": "pprof-symbols",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/pprof/threadcreate": {
+      "get": {
+        "summary": "Returns stack traces that led to the creation of new OS threads",
+        "description": "Returns stack traces that led to the creation of new OS threads",
+        "operationId": "pprof-thread-creations",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/pprof/trace": {
+      "get": {
+        "summary": "Returns the execution trace in binary form.",
+        "description": "Returns  the execution trace in binary form. Tracing lasts for duration specified in seconds GET parameter, or for 1 second if not specified.",
+        "operationId": "pprof-execution-trace",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/seal": {
+      "description": "Seals the Vault.",
+      "x-vault-sudo": true,
+      "post": {
+        "summary": "Seal the Vault.",
+        "operationId": "seal",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sys/seal-status": {
+      "description": "Returns the seal status of the Vault.",
+      "x-vault-unauthenticated": true,
+      "get": {
+        "summary": "Check the seal status of a Vault.",
+        "operationId": "seal-status",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SealStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+
+
+
+
+    "/sys/tools/hash": {
+      "description": "Generate a hash sum for input data",
+      "post": {
+        "operationId": "generate-hash",
+        "tags": [
+          "system"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateHashRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateHashResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sys/tools/hash/{urlalgorithm}": {
+      "description": "Generate a hash sum for input data",
+      "parameters": [
+        {
+          "name": "urlalgorithm",
+          "description": "Algorithm to use (POST URL parameter)",
+          "in": "path",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "post": {
+        "operationId": "generate-hash-with-algorithm",
+        "tags": [
+          "system"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateHashWithAlgorithmRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateHashWithAlgorithmResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sys/tools/random": {
+      "description": "Generate random bytes",
+      "post": {
+        "operationId": "generate-random",
+        "tags": [
+          "system"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateRandomRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateRandomResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sys/tools/random/{source}": {
+      "description": "Generate random bytes",
+      "parameters": [
+        {
+          "name": "source",
+          "description": "Which system to source random data from, ether \"platform\", \"seal\", or \"all\".",
+          "in": "path",
+          "schema": {
+            "type": "string",
+            "default": "platform"
+          },
+          "required": true
+        }
+      ],
+      "post": {
+        "operationId": "generate-random-with-source",
+        "tags": [
+          "system"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateRandomWithSourceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateRandomWithSourceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sys/tools/random/{source}/{urlbytes}": {
+      "description": "Generate random bytes",
+      "parameters": [
+        {
+          "name": "source",
+          "description": "Which system to source random data from, ether \"platform\", \"seal\", or \"all\".",
+          "in": "path",
+          "schema": {
+            "type": "string",
+            "default": "platform"
+          },
+          "required": true
+        },
+        {
+          "name": "urlbytes",
+          "description": "The number of bytes to generate (POST URL parameter)",
+          "in": "path",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "post": {
+        "operationId": "generate-random-with-source-and-bytes",
+        "tags": [
+          "system"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateRandomWithSourceAndBytesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateRandomWithSourceAndBytesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sys/tools/random/{urlbytes}": {
+      "description": "Generate random bytes",
+      "parameters": [
+        {
+          "name": "urlbytes",
+          "description": "The number of bytes to generate (POST URL parameter)",
+          "in": "path",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "post": {
+        "operationId": "generate-random-with-bytes",
+        "tags": [
+          "system"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateRandomWithBytesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateRandomWithBytesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sys/unseal": {
+      "description": "Unseals the Vault.",
+      "x-vault-unauthenticated": true,
+      "post": {
+        "summary": "Unseal the Vault.",
+        "operationId": "unseal",
+        "tags": [
+          "system"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnsealRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnsealResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AliasCreateRequest": {
+        "type": "object",
+        "properties": {
+          "canonical_id": {
+            "type": "string",
+            "description": "Entity ID to which this alias belongs to"
+          },
+          "entity_id": {
+            "type": "string",
+            "description": "Entity ID to which this alias belongs to. This field is deprecated in favor of 'canonical_id'."
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the alias"
+          },
+          "mount_accessor": {
+            "type": "string",
+            "description": "Mount accessor to which this alias belongs to"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the alias"
+          }
+        }
+      },
+      "AliasUpdateByIdRequest": {
+        "type": "object",
+        "properties": {
+          "canonical_id": {
+            "type": "string",
+            "description": "Entity ID to which this alias should be tied to"
+          },
+          "entity_id": {
+            "type": "string",
+            "description": "Entity ID to which this alias should be tied to. This field is deprecated in favor of 'canonical_id'."
+          },
+          "mount_accessor": {
+            "type": "string",
+            "description": "Mount accessor to which this alias belongs to"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the alias"
+          }
+        }
+      },
+      "AuditingCalculateHashRequest": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "string"
+          }
+        }
+      },
+      "AuditingCalculateHashResponse": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string"
+          }
+        }
+      },
+      "AuditingEnableDeviceRequest": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "User-friendly description for this audit backend."
+          },
+          "local": {
+            "type": "boolean",
+            "description": "Mark the mount as a local mount, which is not replicated and is unaffected by replication.",
+            "default": false
+          },
+          "options": {
+            "type": "object",
+            "description": "Configuration options for the audit backend.",
+            "format": "kvpairs"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the backend. Example: \"mysql\""
+          }
+        }
+      },
+      "AuditingEnableRequestHeaderRequest": {
+        "type": "object",
+        "properties": {
+          "hmac": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AuditingListRequestHeadersResponse": {
+        "type": "object",
+        "properties": {
+          "headers": {
+            "type": "object",
+            "format": "map"
+          }
+        }
+      },
+      "AuthEnableMethodRequest": {
+        "type": "object",
+        "properties": {
+          "config": {
+            "type": "object",
+            "description": "Configuration for this mount, such as plugin_name.",
+            "format": "map"
+          },
+          "description": {
+            "type": "string",
+            "description": "User-friendly description for this credential backend."
+          },
+          "external_entropy_access": {
+            "type": "boolean",
+            "description": "Whether to give the mount access to Vault's external entropy.",
+            "default": false
+          },
+          "local": {
+            "type": "boolean",
+            "description": "Mark the mount as a local mount, which is not replicated and is unaffected by replication.",
+            "default": false
+          },
+          "options": {
+            "type": "object",
+            "description": "The options to pass into the backend. Should be a json object with string keys and values.",
+            "format": "kvpairs"
+          },
+          "plugin_name": {
+            "type": "string",
+            "description": "Name of the auth plugin to use based from the name in the plugin catalog."
+          },
+          "plugin_version": {
+            "type": "string",
+            "description": "The semantic version of the plugin to use, or image tag if oci_image is provided."
+          },
+          "seal_wrap": {
+            "type": "boolean",
+            "description": "Whether to turn on seal wrapping for the mount.",
+            "default": false
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the backend. Example: \"userpass\""
+          }
+        }
+      },
+      "AuthReadConfigurationResponse": {
+        "type": "object",
+        "properties": {
+          "accessor": {
+            "type": "string"
+          },
+          "config": {
+            "type": "object",
+            "format": "map"
+          },
+          "deprecation_status": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "external_entropy_access": {
+            "type": "boolean"
+          },
+          "local": {
+            "type": "boolean"
+          },
+          "options": {
+            "type": "object",
+            "format": "map"
+          },
+          "plugin_version": {
+            "type": "string"
+          },
+          "running_plugin_version": {
+            "type": "string"
+          },
+          "running_sha256": {
+            "type": "string"
+          },
+          "seal_wrap": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string"
+          },
+          "uuid": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthReadTuningInformationResponse": {
+        "type": "object",
+        "properties": {
+          "allowed_managed_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowed_response_headers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "audit_non_hmac_request_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "audit_non_hmac_response_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "default_lease_ttl": {
+            "type": "integer"
+          },
+          "description": {
+            "type": "string"
+          },
+          "external_entropy_access": {
+            "type": "boolean"
+          },
+          "force_no_cache": {
+            "type": "boolean"
+          },
+          "identity_token_key": {
+            "type": "string"
+          },
+          "listing_visibility": {
+            "type": "string"
+          },
+          "max_lease_ttl": {
+            "type": "integer"
+          },
+          "options": {
+            "type": "object",
+            "format": "map"
+          },
+          "passthrough_request_headers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "plugin_version": {
+            "type": "string"
+          },
+          "token_type": {
+            "type": "string"
+          },
+          "user_lockout_counter_reset_duration": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "user_lockout_disable": {
+            "type": "boolean"
+          },
+          "user_lockout_duration": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "user_lockout_threshold": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "AuthTuneConfigurationParametersRequest": {
+        "type": "object",
+        "properties": {
+          "allowed_response_headers": {
+            "type": "array",
+            "description": "A list of headers to whitelist and allow a plugin to set on responses.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "audit_non_hmac_request_keys": {
+            "type": "array",
+            "description": "The list of keys in the request data object that will not be HMAC'd by audit devices.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "audit_non_hmac_response_keys": {
+            "type": "array",
+            "description": "The list of keys in the response data object that will not be HMAC'd by audit devices.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "default_lease_ttl": {
+            "type": "string",
+            "description": "The default lease TTL for this mount."
+          },
+          "description": {
+            "type": "string",
+            "description": "User-friendly description for this credential backend."
+          },
+          "identity_token_key": {
+            "type": "string",
+            "description": "The name of the key used to sign plugin identity tokens. Defaults to the default key."
+          },
+          "listing_visibility": {
+            "type": "string",
+            "description": "Determines the visibility of the mount in the UI-specific listing endpoint. Accepted value are 'unauth' and 'hidden', with the empty default ('') behaving like 'hidden'."
+          },
+          "max_lease_ttl": {
+            "type": "string",
+            "description": "The max lease TTL for this mount."
+          },
+          "options": {
+            "type": "object",
+            "description": "The options to pass into the backend. Should be a json object with string keys and values.",
+            "format": "kvpairs"
+          },
+          "passthrough_request_headers": {
+            "type": "array",
+            "description": "A list of headers to whitelist and pass from the request to the plugin.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "plugin_version": {
+            "type": "string",
+            "description": "The semantic version of the plugin to use, or image tag if oci_image is provided."
+          },
+          "token_type": {
+            "type": "string",
+            "description": "The type of token to issue (service or batch)."
+          },
+          "user_lockout_config": {
+            "type": "object",
+            "description": "The user lockout configuration to pass into the backend. Should be a json object with string keys and values.",
+            "format": "map"
+          }
+        }
+      },
+      "CollectHostInformationResponse": {
+        "type": "object",
+        "properties": {
+          "cpu": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "cpu_times": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "disk": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "host": {
+            "type": "object",
+            "format": "map"
+          },
+          "memory": {
+            "type": "object",
+            "format": "map"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CorsConfigureRequest": {
+        "type": "object",
+        "properties": {
+          "allowed_headers": {
+            "type": "array",
+            "description": "A comma-separated string or array of strings indicating headers that are allowed on cross-origin requests.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowed_origins": {
+            "type": "array",
+            "description": "A comma-separated string or array of strings indicating origins that may make cross-origin requests.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "enable": {
+            "type": "boolean",
+            "description": "Enables or disables CORS headers on requests."
+          }
+        }
+      },
+      "CorsReadConfigurationResponse": {
+        "type": "object",
+        "properties": {
+          "allowed_headers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowed_origins": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "DecodeTokenRequest": {
+        "type": "object",
+        "properties": {
+          "encoded_token": {
+            "type": "string",
+            "description": "Specifies the encoded token (result from generate-root)."
+          },
+          "otp": {
+            "type": "string",
+            "description": "Specifies the otp code for decode."
+          }
+        }
+      },
+      "EncryptionKeyConfigureRotationRequest": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether automatic rotation is enabled."
+          },
+          "interval": {
+            "type": "string",
+            "description": "How long after installation of an active key term that the key will be automatically rotated.",
+            "format": "duration"
+          },
+          "max_operations": {
+            "type": "integer",
+            "description": "The number of encryption operations performed before the barrier key is automatically rotated.",
+            "format": "int64"
+          }
+        }
+      },
+      "EncryptionKeyReadRotationConfigurationResponse": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "interval": {
+            "type": "string",
+            "format": "duration"
+          },
+          "max_operations": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "EntityBatchDeleteRequest": {
+        "type": "object",
+        "properties": {
+          "entity_ids": {
+            "type": "array",
+            "description": "Entity IDs to delete",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "EntityCreateAliasRequest": {
+        "type": "object",
+        "properties": {
+          "canonical_id": {
+            "type": "string",
+            "description": "Entity ID to which this alias belongs"
+          },
+          "custom_metadata": {
+            "type": "object",
+            "description": "User provided key-value pairs",
+            "format": "kvpairs"
+          },
+          "entity_id": {
+            "type": "string",
+            "description": "Entity ID to which this alias belongs. This field is deprecated, use canonical_id."
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the entity alias. If set, updates the corresponding entity alias."
+          },
+          "mount_accessor": {
+            "type": "string",
+            "description": "Mount accessor to which this alias belongs to; unused for a modify"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the alias; unused for a modify"
+          }
+        }
+      },
+      "EntityCreateRequest": {
+        "type": "object",
+        "properties": {
+          "disabled": {
+            "type": "boolean",
+            "description": "If set true, tokens tied to this identity will not be able to be used (but will not be revoked)."
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the entity. If set, updates the corresponding existing entity."
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata to be associated with the entity. In CLI, this parameter can be repeated multiple times, and it all gets merged together. For example: vault <command> <path> metadata=key1=value1 metadata=key2=value2",
+            "format": "kvpairs"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the entity"
+          },
+          "policies": {
+            "type": "array",
+            "description": "Policies to be tied to the entity.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "EntityLookUpRequest": {
+        "type": "object",
+        "properties": {
+          "alias_id": {
+            "type": "string",
+            "description": "ID of the alias."
+          },
+          "alias_mount_accessor": {
+            "type": "string",
+            "description": "Accessor of the mount to which the alias belongs to. This should be supplied in conjunction with 'alias_name'."
+          },
+          "alias_name": {
+            "type": "string",
+            "description": "Name of the alias. This should be supplied in conjunction with 'alias_mount_accessor'."
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the entity."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the entity."
+          }
+        }
+      },
+      "EntityMergeRequest": {
+        "type": "object",
+        "properties": {
+          "conflicting_alias_ids_to_keep": {
+            "type": "array",
+            "description": "Alias IDs to keep in case of conflicting aliases. Ignored if no conflicting aliases found",
+            "items": {
+              "type": "string"
+            }
+          },
+          "force": {
+            "type": "boolean",
+            "description": "Setting this will follow the 'mine' strategy for merging MFA secrets. If there are secrets of the same type both in entities that are merged from and in entity into which all others are getting merged, secrets in the destination will be unaltered. If not set, this API will throw an error containing all the conflicts."
+          },
+          "from_entity_ids": {
+            "type": "array",
+            "description": "Entity IDs which need to get merged",
+            "items": {
+              "type": "string"
+            }
+          },
+          "to_entity_id": {
+            "type": "string",
+            "description": "Entity ID into which all the other entities need to get merged"
+          }
+        }
+      },
+      "EntityUpdateAliasByIdRequest": {
+        "type": "object",
+        "properties": {
+          "canonical_id": {
+            "type": "string",
+            "description": "Entity ID to which this alias should be tied to"
+          },
+          "custom_metadata": {
+            "type": "object",
+            "description": "User provided key-value pairs",
+            "format": "kvpairs"
+          },
+          "entity_id": {
+            "type": "string",
+            "description": "Entity ID to which this alias belongs to. This field is deprecated, use canonical_id."
+          },
+          "mount_accessor": {
+            "type": "string",
+            "description": "(Unused)"
+          },
+          "name": {
+            "type": "string",
+            "description": "(Unused)"
+          }
+        }
+      },
+      "EntityUpdateByIdRequest": {
+        "type": "object",
+        "properties": {
+          "disabled": {
+            "type": "boolean",
+            "description": "If set true, tokens tied to this identity will not be able to be used (but will not be revoked)."
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata to be associated with the entity. In CLI, this parameter can be repeated multiple times, and it all gets merged together. For example: vault <command> <path> metadata=key1=value1 metadata=key2=value2",
+            "format": "kvpairs"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the entity"
+          },
+          "policies": {
+            "type": "array",
+            "description": "Policies to be tied to the entity.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "EntityUpdateByNameRequest": {
+        "type": "object",
+        "properties": {
+          "disabled": {
+            "type": "boolean",
+            "description": "If set true, tokens tied to this identity will not be able to be used (but will not be revoked)."
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the entity. If set, updates the corresponding existing entity."
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata to be associated with the entity. In CLI, this parameter can be repeated multiple times, and it all gets merged together. For example: vault <command> <path> metadata=key1=value1 metadata=key2=value2",
+            "format": "kvpairs"
+          },
+          "policies": {
+            "type": "array",
+            "description": "Policies to be tied to the entity.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "GenerateHashRequest": {
+        "type": "object",
+        "properties": {
+          "algorithm": {
+            "type": "string",
+            "description": "Algorithm to use (POST body parameter). Valid values are: * sha2-224 * sha2-256 * sha2-384 * sha2-512 Defaults to \"sha2-256\".",
+            "default": "sha2-256"
+          },
+          "format": {
+            "type": "string",
+            "description": "Encoding format to use. Can be \"hex\" or \"base64\". Defaults to \"hex\".",
+            "default": "hex"
+          },
+          "input": {
+            "type": "string",
+            "description": "The base64-encoded input data"
+          }
+        }
+      },
+      "GenerateHashResponse": {
+        "type": "object",
+        "properties": {
+          "sum": {
+            "type": "string"
+          }
+        }
+      },
+      "GenerateHashWithAlgorithmRequest": {
+        "type": "object",
+        "properties": {
+          "algorithm": {
+            "type": "string",
+            "description": "Algorithm to use (POST body parameter). Valid values are: * sha2-224 * sha2-256 * sha2-384 * sha2-512 Defaults to \"sha2-256\".",
+            "default": "sha2-256"
+          },
+          "format": {
+            "type": "string",
+            "description": "Encoding format to use. Can be \"hex\" or \"base64\". Defaults to \"hex\".",
+            "default": "hex"
+          },
+          "input": {
+            "type": "string",
+            "description": "The base64-encoded input data"
+          }
+        }
+      },
+      "GenerateHashWithAlgorithmResponse": {
+        "type": "object",
+        "properties": {
+          "sum": {
+            "type": "string"
+          }
+        }
+      },
+      "GenerateRandomRequest": {
+        "type": "object",
+        "properties": {
+          "bytes": {
+            "type": "integer",
+            "description": "The number of bytes to generate (POST body parameter). Defaults to 32 (256 bits).",
+            "default": 32
+          },
+          "format": {
+            "type": "string",
+            "description": "Encoding format to use. Can be \"hex\" or \"base64\". Defaults to \"base64\".",
+            "default": "base64"
+          }
+        }
+      },
+      "GenerateRandomResponse": {
+        "type": "object",
+        "properties": {
+          "random_bytes": {
+            "type": "string"
+          }
+        }
+      },
+      "GenerateRandomWithBytesRequest": {
+        "type": "object",
+        "properties": {
+          "bytes": {
+            "type": "integer",
+            "description": "The number of bytes to generate (POST body parameter). Defaults to 32 (256 bits).",
+            "default": 32
+          },
+          "format": {
+            "type": "string",
+            "description": "Encoding format to use. Can be \"hex\" or \"base64\". Defaults to \"base64\".",
+            "default": "base64"
+          }
+        }
+      },
+      "GenerateRandomWithBytesResponse": {
+        "type": "object",
+        "properties": {
+          "random_bytes": {
+            "type": "string"
+          }
+        }
+      },
+      "GenerateRandomWithSourceAndBytesRequest": {
+        "type": "object",
+        "properties": {
+          "bytes": {
+            "type": "integer",
+            "description": "The number of bytes to generate (POST body parameter). Defaults to 32 (256 bits).",
+            "default": 32
+          },
+          "format": {
+            "type": "string",
+            "description": "Encoding format to use. Can be \"hex\" or \"base64\". Defaults to \"base64\".",
+            "default": "base64"
+          }
+        }
+      },
+      "GenerateRandomWithSourceAndBytesResponse": {
+        "type": "object",
+        "properties": {
+          "random_bytes": {
+            "type": "string"
+          }
+        }
+      },
+      "GenerateRandomWithSourceRequest": {
+        "type": "object",
+        "properties": {
+          "bytes": {
+            "type": "integer",
+            "description": "The number of bytes to generate (POST body parameter). Defaults to 32 (256 bits).",
+            "default": 32
+          },
+          "format": {
+            "type": "string",
+            "description": "Encoding format to use. Can be \"hex\" or \"base64\". Defaults to \"base64\".",
+            "default": "base64"
+          }
+        }
+      },
+      "GenerateRandomWithSourceResponse": {
+        "type": "object",
+        "properties": {
+          "random_bytes": {
+            "type": "string"
+          }
+        }
+      },
+      "GroupCreateAliasRequest": {
+        "type": "object",
+        "properties": {
+          "canonical_id": {
+            "type": "string",
+            "description": "ID of the group to which this is an alias."
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the group alias."
+          },
+          "mount_accessor": {
+            "type": "string",
+            "description": "Mount accessor to which this alias belongs to."
+          },
+          "name": {
+            "type": "string",
+            "description": "Alias of the group."
+          }
+        }
+      },
+      "GroupCreateRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID of the group. If set, updates the corresponding existing group."
+          },
+          "member_entity_ids": {
+            "type": "array",
+            "description": "Entity IDs to be assigned as group members.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "member_group_ids": {
+            "type": "array",
+            "description": "Group IDs to be assigned as group members.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata to be associated with the group. In CLI, this parameter can be repeated multiple times, and it all gets merged together. For example: vault <command> <path> metadata=key1=value1 metadata=key2=value2",
+            "format": "kvpairs"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the group."
+          },
+          "policies": {
+            "type": "array",
+            "description": "Policies to be tied to the group.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the group, 'internal' or 'external'. Defaults to 'internal'"
+          }
+        }
+      },
+      "GroupLookUpRequest": {
+        "type": "object",
+        "properties": {
+          "alias_id": {
+            "type": "string",
+            "description": "ID of the alias."
+          },
+          "alias_mount_accessor": {
+            "type": "string",
+            "description": "Accessor of the mount to which the alias belongs to. This should be supplied in conjunction with 'alias_name'."
+          },
+          "alias_name": {
+            "type": "string",
+            "description": "Name of the alias. This should be supplied in conjunction with 'alias_mount_accessor'."
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the group."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the group."
+          }
+        }
+      },
+      "GroupUpdateAliasByIdRequest": {
+        "type": "object",
+        "properties": {
+          "canonical_id": {
+            "type": "string",
+            "description": "ID of the group to which this is an alias."
+          },
+          "mount_accessor": {
+            "type": "string",
+            "description": "Mount accessor to which this alias belongs to."
+          },
+          "name": {
+            "type": "string",
+            "description": "Alias of the group."
+          }
+        }
+      },
+      "GroupUpdateByIdRequest": {
+        "type": "object",
+        "properties": {
+          "member_entity_ids": {
+            "type": "array",
+            "description": "Entity IDs to be assigned as group members.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "member_group_ids": {
+            "type": "array",
+            "description": "Group IDs to be assigned as group members.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata to be associated with the group. In CLI, this parameter can be repeated multiple times, and it all gets merged together. For example: vault <command> <path> metadata=key1=value1 metadata=key2=value2",
+            "format": "kvpairs"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the group."
+          },
+          "policies": {
+            "type": "array",
+            "description": "Policies to be tied to the group.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the group, 'internal' or 'external'. Defaults to 'internal'"
+          }
+        }
+      },
+      "GroupUpdateByNameRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID of the group. If set, updates the corresponding existing group."
+          },
+          "member_entity_ids": {
+            "type": "array",
+            "description": "Entity IDs to be assigned as group members.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "member_group_ids": {
+            "type": "array",
+            "description": "Group IDs to be assigned as group members.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata to be associated with the group. In CLI, this parameter can be repeated multiple times, and it all gets merged together. For example: vault <command> <path> metadata=key1=value1 metadata=key2=value2",
+            "format": "kvpairs"
+          },
+          "policies": {
+            "type": "array",
+            "description": "Policies to be tied to the group.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the group, 'internal' or 'external'. Defaults to 'internal'"
+          }
+        }
+      },
+      "HaStatusResponse": {
+        "type": "object",
+        "properties": {
+          "nodes": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "InitializeRequest": {
+        "type": "object",
+        "properties": {
+          "pgp_keys": {
+            "type": "array",
+            "description": "Specifies an array of PGP public keys used to encrypt the output unseal keys. Ordering is preserved. The keys must be base64-encoded from their original binary representation. The size of this array must be the same as `secret_shares`.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recovery_pgp_keys": {
+            "type": "array",
+            "description": "Specifies an array of PGP public keys used to encrypt the output recovery keys. Ordering is preserved. The keys must be base64-encoded from their original binary representation. The size of this array must be the same as `recovery_shares`.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recovery_shares": {
+            "type": "integer",
+            "description": "Specifies the number of shares to split the recovery key into."
+          },
+          "recovery_threshold": {
+            "type": "integer",
+            "description": "Specifies the number of shares required to reconstruct the recovery key. This must be less than or equal to `recovery_shares`."
+          },
+          "root_token_pgp_key": {
+            "type": "string",
+            "description": "Specifies a PGP public key used to encrypt the initial root token. The key must be base64-encoded from its original binary representation."
+          },
+          "secret_shares": {
+            "type": "integer",
+            "description": "Specifies the number of shares to split the unseal key into."
+          },
+          "secret_threshold": {
+            "type": "integer",
+            "description": "Specifies the number of shares required to reconstruct the unseal key. This must be less than or equal secret_shares. If using Vault HSM with auto-unsealing, this value must be the same as `secret_shares`."
+          },
+          "stored_shares": {
+            "type": "integer",
+            "description": "Specifies the number of shares that should be encrypted by the HSM and stored for auto-unsealing. Currently must be the same as `secret_shares`."
+          }
+        }
+      },
+      "InternalClientActivityConfigureRequest": {
+        "type": "object",
+        "properties": {
+          "default_report_months": {
+            "type": "integer",
+            "description": "Number of months to report if no start date specified.",
+            "default": 12,
+            "deprecated": true
+          },
+          "enabled": {
+            "type": "string",
+            "description": "Enable or disable collection of client count: enable, disable, or default.",
+            "default": "default"
+          },
+          "retention_months": {
+            "type": "integer",
+            "description": "Number of months of client data to retain. Setting to 0 will clear all existing data.",
+            "default": 48
+          }
+        }
+      },
+      "InternalCountEntitiesResponse": {
+        "type": "object",
+        "properties": {
+          "counters": {
+            "type": "object",
+            "format": "map"
+          }
+        }
+      },
+      "InternalCountTokensResponse": {
+        "type": "object",
+        "properties": {
+          "counters": {
+            "type": "object",
+            "format": "map"
+          }
+        }
+      },
+      "InternalGenerateOpenApiDocumentWithParametersRequest": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "string",
+            "description": "Context string appended to every operationId"
+          },
+          "generic_mount_paths": {
+            "type": "boolean",
+            "description": "Use generic mount paths",
+            "default": false
+          }
+        }
+      },
+      "InternalUiListEnabledFeatureFlagsResponse": {
+        "type": "object",
+        "properties": {
+          "feature_flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "InternalUiListEnabledVisibleMountsResponse": {
+        "type": "object",
+        "properties": {
+          "auth": {
+            "type": "object",
+            "description": "auth mounts",
+            "format": "map"
+          },
+          "secret": {
+            "type": "object",
+            "description": "secret mounts",
+            "format": "map"
+          }
+        }
+      },
+      "InternalUiListNamespacesResponse": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "description": "field is only returned if there are one or more namespaces",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "InternalUiReadAuthenticatedActiveCustomMessagesResponse": {
+        "type": "object",
+        "properties": {
+          "key_info": {
+            "type": "object",
+            "format": "map"
+          },
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "InternalUiReadMountInformationResponse": {
+        "type": "object",
+        "properties": {
+          "accessor": {
+            "type": "string"
+          },
+          "config": {
+            "type": "object",
+            "format": "map"
+          },
+          "description": {
+            "type": "string"
+          },
+          "external_entropy_access": {
+            "type": "boolean"
+          },
+          "local": {
+            "type": "boolean"
+          },
+          "options": {
+            "type": "object",
+            "format": "map"
+          },
+          "path": {
+            "type": "string"
+          },
+          "plugin_version": {
+            "type": "string"
+          },
+          "running_plugin_version": {
+            "type": "string"
+          },
+          "running_sha256": {
+            "type": "string"
+          },
+          "seal_wrap": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string"
+          },
+          "uuid": {
+            "type": "string"
+          }
+        }
+      },
+      "InternalUiReadResultantAclResponse": {
+        "type": "object",
+        "properties": {
+          "chroot_namespace": {
+            "type": "string"
+          },
+          "exact_paths": {
+            "type": "object",
+            "format": "map"
+          },
+          "glob_paths": {
+            "type": "object",
+            "format": "map"
+          },
+          "root": {
+            "type": "boolean"
+          }
+        }
+      },
+      "InternalUiReadUnauthenticatedActiveCustomMessagesResponse": {
+        "type": "object",
+        "properties": {
+          "key_info": {
+            "type": "object",
+            "format": "map"
+          },
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "KvV2ConfigureRequest": {
+        "type": "object",
+        "properties": {
+          "cas_required": {
+            "type": "boolean",
+            "description": "If true, the backend will require the cas parameter to be set for each write"
+          },
+          "delete_version_after": {
+            "type": "string",
+            "description": "If set, the length of time before a version is deleted. A negative duration disables the use of delete_version_after on all keys. A zero duration clears the current setting. Accepts a Go duration format string.",
+            "format": "duration"
+          },
+          "max_versions": {
+            "type": "integer",
+            "description": "The number of versions to keep for each key. Defaults to 10"
+          }
+        }
+      },
+      "KvV2DeleteVersionsRequest": {
+        "type": "object",
+        "properties": {
+          "versions": {
+            "type": "array",
+            "description": "The versions to be archived. The versioned data will not be deleted, but it will no longer be returned in normal get requests.",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "KvV2DestroyVersionsRequest": {
+        "type": "object",
+        "properties": {
+          "versions": {
+            "type": "array",
+            "description": "The versions to destroy. Their data will be permanently deleted.",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "KvV2PatchResponse": {
+        "type": "object",
+        "properties": {
+          "created_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "custom_metadata": {
+            "type": "object",
+            "format": "map"
+          },
+          "deletion_time": {
+            "type": "string"
+          },
+          "destroyed": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "KvV2ReadConfigurationResponse": {
+        "type": "object",
+        "properties": {
+          "cas_required": {
+            "type": "boolean",
+            "description": "If true, the backend will require the cas parameter to be set for each write"
+          },
+          "delete_version_after": {
+            "type": "string",
+            "description": "The length of time before a version is deleted.",
+            "format": "duration"
+          },
+          "max_versions": {
+            "type": "integer",
+            "description": "The number of versions to keep for each key."
+          }
+        }
+      },
+      "KvV2ReadMetadataResponse": {
+        "type": "object",
+        "properties": {
+          "cas_required": {
+            "type": "boolean"
+          },
+          "created_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "current_version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "custom_metadata": {
+            "type": "object",
+            "description": "User-provided key-value pairs that are used to describe arbitrary and version-agnostic information about a secret.",
+            "format": "map"
+          },
+          "delete_version_after": {
+            "type": "string",
+            "description": "The length of time before a version is deleted.",
+            "format": "duration"
+          },
+          "max_versions": {
+            "type": "integer",
+            "description": "The number of versions to keep",
+            "format": "int64"
+          },
+          "oldest_version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updated_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "versions": {
+            "type": "object",
+            "format": "map"
+          }
+        }
+      },
+      "KvV2ReadResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "format": "map"
+          },
+          "metadata": {
+            "type": "object",
+            "format": "map"
+          }
+        }
+      },
+      "KvV2ReadSubkeysResponse": {
+        "type": "object",
+        "properties": {
+          "metadata": {
+            "type": "object",
+            "format": "map"
+          },
+          "subkeys": {
+            "type": "object",
+            "format": "map"
+          }
+        }
+      },
+      "KvV2UndeleteVersionsRequest": {
+        "type": "object",
+        "properties": {
+          "versions": {
+            "type": "array",
+            "description": "The versions to unarchive. The versions will be restored and their data will be returned on normal get requests.",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "KvV2WriteMetadataRequest": {
+        "type": "object",
+        "properties": {
+          "cas_required": {
+            "type": "boolean",
+            "description": "If true the key will require the cas parameter to be set on all write requests. If false, the backend’s configuration will be used."
+          },
+          "custom_metadata": {
+            "type": "object",
+            "description": "User-provided key-value pairs that are used to describe arbitrary and version-agnostic information about a secret.",
+            "format": "map"
+          },
+          "delete_version_after": {
+            "type": "string",
+            "description": "The length of time before a version is deleted. If not set, the backend's configured delete_version_after is used. Cannot be greater than the backend's delete_version_after. A zero duration clears the current setting. A negative duration will cause an error.",
+            "format": "duration"
+          },
+          "max_versions": {
+            "type": "integer",
+            "description": "The number of versions to keep. If not set, the backend’s configured max version is used."
+          }
+        }
+      },
+      "KvV2WriteRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "description": "The contents of the data map will be stored and returned on read.",
+            "format": "map"
+          },
+          "options": {
+            "type": "object",
+            "description": "Options for writing a KV entry. Set the \"cas\" value to use a Check-And-Set operation. If not set the write will be allowed. If set to 0 a write will only be allowed if the key doesn’t exist. If the index is non-zero the write will only be allowed if the key’s current version matches the version specified in the cas parameter.",
+            "format": "map"
+          },
+          "version": {
+            "type": "integer",
+            "description": "If provided during a read, the value at the version number will be returned"
+          }
+        }
+      },
+      "KvV2WriteResponse": {
+        "type": "object",
+        "properties": {
+          "created_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "custom_metadata": {
+            "type": "object",
+            "format": "map"
+          },
+          "deletion_time": {
+            "type": "string"
+          },
+          "destroyed": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "LeaderStatusResponse": {
+        "type": "object",
+        "properties": {
+          "active_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ha_enabled": {
+            "type": "boolean"
+          },
+          "is_self": {
+            "type": "boolean"
+          },
+          "last_wal": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "leader_address": {
+            "type": "string"
+          },
+          "leader_cluster_address": {
+            "type": "string"
+          },
+          "performance_standby": {
+            "type": "boolean"
+          },
+          "performance_standby_last_remote_wal": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "raft_applied_index": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "raft_committed_index": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "LeasesCountResponse": {
+        "type": "object",
+        "properties": {
+          "counts": {
+            "type": "integer",
+            "description": "Number of matching leases per mount"
+          },
+          "lease_count": {
+            "type": "integer",
+            "description": "Number of matching leases"
+          }
+        }
+      },
+      "LeasesListResponse": {
+        "type": "object",
+        "properties": {
+          "counts": {
+            "type": "integer",
+            "description": "Number of matching leases per mount"
+          },
+          "lease_count": {
+            "type": "integer",
+            "description": "Number of matching leases"
+          }
+        }
+      },
+      "LeasesLookUpResponse": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "description": "A list of lease ids",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "LeasesReadLeaseRequest": {
+        "type": "object",
+        "properties": {
+          "lease_id": {
+            "type": "string",
+            "description": "The lease identifier to renew. This is included with a lease."
+          }
+        }
+      },
+      "LeasesReadLeaseResponse": {
+        "type": "object",
+        "properties": {
+          "expire_time": {
+            "type": "string",
+            "description": "Optional lease expiry time",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "description": "Lease id"
+          },
+          "issue_time": {
+            "type": "string",
+            "description": "Timestamp for the lease's issue time",
+            "format": "date-time"
+          },
+          "last_renewal": {
+            "type": "string",
+            "description": "Optional Timestamp of the last time the lease was renewed",
+            "format": "date-time"
+          },
+          "renewable": {
+            "type": "boolean",
+            "description": "True if the lease is able to be renewed"
+          },
+          "ttl": {
+            "type": "integer",
+            "description": "Time to Live set for the lease, returns 0 if unset"
+          }
+        }
+      },
+      "LeasesRenewLease2Request": {
+        "type": "object",
+        "properties": {
+          "increment": {
+            "type": "string",
+            "description": "The desired increment in seconds to the lease",
+            "format": "duration"
+          },
+          "lease_id": {
+            "type": "string",
+            "description": "The lease identifier to renew. This is included with a lease."
+          }
+        }
+      },
+      "LeasesRenewLeaseRequest": {
+        "type": "object",
+        "properties": {
+          "increment": {
+            "type": "string",
+            "description": "The desired increment in seconds to the lease",
+            "format": "duration"
+          },
+          "lease_id": {
+            "type": "string",
+            "description": "The lease identifier to renew. This is included with a lease."
+          }
+        }
+      },
+      "LeasesRenewLeaseWithId2Request": {
+        "type": "object",
+        "properties": {
+          "increment": {
+            "type": "string",
+            "description": "The desired increment in seconds to the lease",
+            "format": "duration"
+          },
+          "lease_id": {
+            "type": "string",
+            "description": "The lease identifier to renew. This is included with a lease."
+          }
+        }
+      },
+      "LeasesRenewLeaseWithIdRequest": {
+        "type": "object",
+        "properties": {
+          "increment": {
+            "type": "string",
+            "description": "The desired increment in seconds to the lease",
+            "format": "duration"
+          },
+          "lease_id": {
+            "type": "string",
+            "description": "The lease identifier to renew. This is included with a lease."
+          }
+        }
+      },
+      "LeasesRevokeLease2Request": {
+        "type": "object",
+        "properties": {
+          "lease_id": {
+            "type": "string",
+            "description": "The lease identifier to renew. This is included with a lease."
+          },
+          "sync": {
+            "type": "boolean",
+            "description": "Whether or not to perform the revocation synchronously",
+            "default": true
+          }
+        }
+      },
+      "LeasesRevokeLeaseRequest": {
+        "type": "object",
+        "properties": {
+          "lease_id": {
+            "type": "string",
+            "description": "The lease identifier to renew. This is included with a lease."
+          },
+          "sync": {
+            "type": "boolean",
+            "description": "Whether or not to perform the revocation synchronously",
+            "default": true
+          }
+        }
+      },
+      "LeasesRevokeLeaseWithId2Request": {
+        "type": "object",
+        "properties": {
+          "lease_id": {
+            "type": "string",
+            "description": "The lease identifier to renew. This is included with a lease."
+          },
+          "sync": {
+            "type": "boolean",
+            "description": "Whether or not to perform the revocation synchronously",
+            "default": true
+          }
+        }
+      },
+      "LeasesRevokeLeaseWithIdRequest": {
+        "type": "object",
+        "properties": {
+          "lease_id": {
+            "type": "string",
+            "description": "The lease identifier to renew. This is included with a lease."
+          },
+          "sync": {
+            "type": "boolean",
+            "description": "Whether or not to perform the revocation synchronously",
+            "default": true
+          }
+        }
+      },
+      "LeasesRevokeLeaseWithPrefix2Request": {
+        "type": "object",
+        "properties": {
+          "sync": {
+            "type": "boolean",
+            "description": "Whether or not to perform the revocation synchronously",
+            "default": true
+          }
+        }
+      },
+      "LeasesRevokeLeaseWithPrefixRequest": {
+        "type": "object",
+        "properties": {
+          "sync": {
+            "type": "boolean",
+            "description": "Whether or not to perform the revocation synchronously",
+            "default": true
+          }
+        }
+      },
+      "LoggersUpdateVerbosityLevelForRequest": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "string",
+            "description": "Log verbosity level. Supported values (in order of detail) are \"trace\", \"debug\", \"info\", \"warn\", and \"error\"."
+          }
+        }
+      },
+      "LoggersUpdateVerbosityLevelRequest": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "string",
+            "description": "Log verbosity level. Supported values (in order of detail) are \"trace\", \"debug\", \"info\", \"warn\", and \"error\"."
+          }
+        }
+      },
+      "MfaAdminDestroyTotpSecretRequest": {
+        "type": "object",
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "description": "Identifier of the entity from which the MFA method secret needs to be removed."
+          },
+          "method_id": {
+            "type": "string",
+            "description": "The unique identifier for this MFA method."
+          }
+        },
+        "required": [
+          "entity_id",
+          "method_id"
+        ]
+      },
+      "MfaAdminGenerateTotpSecretRequest": {
+        "type": "object",
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "description": "Entity ID on which the generated secret needs to get stored."
+          },
+          "method_id": {
+            "type": "string",
+            "description": "The unique identifier for this MFA method."
+          }
+        },
+        "required": [
+          "entity_id",
+          "method_id"
+        ]
+      },
+      "MfaCreateDuoMethodRequest": {
+        "type": "object",
+        "properties": {
+          "api_hostname": {
+            "type": "string",
+            "description": "API host name for Duo."
+          },
+          "integration_key": {
+            "type": "string",
+            "description": "Integration key for Duo."
+          },
+          "method_name": {
+            "type": "string",
+            "description": "The unique name identifier for this MFA method."
+          },
+          "push_info": {
+            "type": "string",
+            "description": "Push information for Duo."
+          },
+          "secret_key": {
+            "type": "string",
+            "description": "Secret key for Duo."
+          },
+          "use_passcode": {
+            "type": "boolean",
+            "description": "If true, the user is reminded to use the passcode upon MFA validation. This option does not enforce using the passcode. Defaults to false."
+          },
+          "username_format": {
+            "type": "string",
+            "description": "A template string for mapping Identity names to MFA method names. Values to subtitute should be placed in {{}}. For example, \"{{alias.name}}@example.com\". Currently-supported mappings: alias.name: The name returned by the mount configured via the mount_accessor parameter If blank, the Alias's name field will be used as-is."
+          }
+        }
+      },
+      "MfaCreateOktaMethodRequest": {
+        "type": "object",
+        "properties": {
+          "api_token": {
+            "type": "string",
+            "description": "Okta API key."
+          },
+          "base_url": {
+            "type": "string",
+            "description": "The base domain to use for the Okta API. When not specified in the configuration, \"okta.com\" is used."
+          },
+          "method_name": {
+            "type": "string",
+            "description": "The unique name identifier for this MFA method."
+          },
+          "org_name": {
+            "type": "string",
+            "description": "Name of the organization to be used in the Okta API."
+          },
+          "primary_email": {
+            "type": "boolean",
+            "description": "If true, the username will only match the primary email for the account. Defaults to false."
+          },
+          "production": {
+            "type": "boolean",
+            "description": "(DEPRECATED) Use base_url instead."
+          },
+          "username_format": {
+            "type": "string",
+            "description": "A template string for mapping Identity names to MFA method names. Values to substitute should be placed in {{}}. For example, \"{{entity.name}}@example.com\". If blank, the Entity's name field will be used as-is."
+          }
+        }
+      },
+      "MfaCreatePingIdMethodRequest": {
+        "type": "object",
+        "properties": {
+          "method_name": {
+            "type": "string",
+            "description": "The unique name identifier for this MFA method."
+          },
+          "settings_file_base64": {
+            "type": "string",
+            "description": "The settings file provided by Ping, Base64-encoded. This must be a settings file suitable for third-party clients, not the PingID SDK or PingFederate."
+          },
+          "username_format": {
+            "type": "string",
+            "description": "A template string for mapping Identity names to MFA method names. Values to subtitute should be placed in {{}}. For example, \"{{alias.name}}@example.com\". Currently-supported mappings: alias.name: The name returned by the mount configured via the mount_accessor parameter If blank, the Alias's name field will be used as-is."
+          }
+        }
+      },
+      "MfaCreateTotpMethodRequest": {
+        "type": "object",
+        "properties": {
+          "algorithm": {
+            "type": "string",
+            "description": "The hashing algorithm used to generate the TOTP token. Options include SHA1, SHA256 and SHA512.",
+            "default": "SHA1"
+          },
+          "digits": {
+            "type": "integer",
+            "description": "The number of digits in the generated TOTP token. This value can either be 6 or 8.",
+            "default": 6
+          },
+          "issuer": {
+            "type": "string",
+            "description": "The name of the key's issuing organization."
+          },
+          "key_size": {
+            "type": "integer",
+            "description": "Determines the size in bytes of the generated key.",
+            "default": 20
+          },
+          "max_validation_attempts": {
+            "type": "integer",
+            "description": "Max number of allowed validation attempts."
+          },
+          "method_name": {
+            "type": "string",
+            "description": "The unique name identifier for this MFA method."
+          },
+          "period": {
+            "type": "string",
+            "description": "The length of time used to generate a counter for the TOTP token calculation.",
+            "format": "duration",
+            "default": 30
+          },
+          "qr_size": {
+            "type": "integer",
+            "description": "The pixel size of the generated square QR code.",
+            "default": 200
+          },
+          "skew": {
+            "type": "integer",
+            "description": "The number of delay periods that are allowed when validating a TOTP token. This value can either be 0 or 1.",
+            "default": 1
+          }
+        }
+      },
+      "MfaGenerateTotpSecretRequest": {
+        "type": "object",
+        "properties": {
+          "method_id": {
+            "type": "string",
+            "description": "The unique identifier for this MFA method."
+          }
+        },
+        "required": [
+          "method_id"
+        ]
+      },
+      "MfaUpdateDuoMethodRequest": {
+        "type": "object",
+        "properties": {
+          "api_hostname": {
+            "type": "string",
+            "description": "API host name for Duo."
+          },
+          "integration_key": {
+            "type": "string",
+            "description": "Integration key for Duo."
+          },
+          "method_name": {
+            "type": "string",
+            "description": "The unique name identifier for this MFA method."
+          },
+          "push_info": {
+            "type": "string",
+            "description": "Push information for Duo."
+          },
+          "secret_key": {
+            "type": "string",
+            "description": "Secret key for Duo."
+          },
+          "use_passcode": {
+            "type": "boolean",
+            "description": "If true, the user is reminded to use the passcode upon MFA validation. This option does not enforce using the passcode. Defaults to false."
+          },
+          "username_format": {
+            "type": "string",
+            "description": "A template string for mapping Identity names to MFA method names. Values to subtitute should be placed in {{}}. For example, \"{{alias.name}}@example.com\". Currently-supported mappings: alias.name: The name returned by the mount configured via the mount_accessor parameter If blank, the Alias's name field will be used as-is."
+          }
+        }
+      },
+      "MfaUpdateOktaMethodRequest": {
+        "type": "object",
+        "properties": {
+          "api_token": {
+            "type": "string",
+            "description": "Okta API key."
+          },
+          "base_url": {
+            "type": "string",
+            "description": "The base domain to use for the Okta API. When not specified in the configuration, \"okta.com\" is used."
+          },
+          "method_name": {
+            "type": "string",
+            "description": "The unique name identifier for this MFA method."
+          },
+          "org_name": {
+            "type": "string",
+            "description": "Name of the organization to be used in the Okta API."
+          },
+          "primary_email": {
+            "type": "boolean",
+            "description": "If true, the username will only match the primary email for the account. Defaults to false."
+          },
+          "production": {
+            "type": "boolean",
+            "description": "(DEPRECATED) Use base_url instead."
+          },
+          "username_format": {
+            "type": "string",
+            "description": "A template string for mapping Identity names to MFA method names. Values to substitute should be placed in {{}}. For example, \"{{entity.name}}@example.com\". If blank, the Entity's name field will be used as-is."
+          }
+        }
+      },
+      "MfaUpdatePingIdMethodRequest": {
+        "type": "object",
+        "properties": {
+          "method_name": {
+            "type": "string",
+            "description": "The unique name identifier for this MFA method."
+          },
+          "settings_file_base64": {
+            "type": "string",
+            "description": "The settings file provided by Ping, Base64-encoded. This must be a settings file suitable for third-party clients, not the PingID SDK or PingFederate."
+          },
+          "username_format": {
+            "type": "string",
+            "description": "A template string for mapping Identity names to MFA method names. Values to subtitute should be placed in {{}}. For example, \"{{alias.name}}@example.com\". Currently-supported mappings: alias.name: The name returned by the mount configured via the mount_accessor parameter If blank, the Alias's name field will be used as-is."
+          }
+        }
+      },
+      "MfaUpdateTotpMethodRequest": {
+        "type": "object",
+        "properties": {
+          "algorithm": {
+            "type": "string",
+            "description": "The hashing algorithm used to generate the TOTP token. Options include SHA1, SHA256 and SHA512.",
+            "default": "SHA1"
+          },
+          "digits": {
+            "type": "integer",
+            "description": "The number of digits in the generated TOTP token. This value can either be 6 or 8.",
+            "default": 6
+          },
+          "issuer": {
+            "type": "string",
+            "description": "The name of the key's issuing organization."
+          },
+          "key_size": {
+            "type": "integer",
+            "description": "Determines the size in bytes of the generated key.",
+            "default": 20
+          },
+          "max_validation_attempts": {
+            "type": "integer",
+            "description": "Max number of allowed validation attempts."
+          },
+          "method_name": {
+            "type": "string",
+            "description": "The unique name identifier for this MFA method."
+          },
+          "period": {
+            "type": "string",
+            "description": "The length of time used to generate a counter for the TOTP token calculation.",
+            "format": "duration",
+            "default": 30
+          },
+          "qr_size": {
+            "type": "integer",
+            "description": "The pixel size of the generated square QR code.",
+            "default": 200
+          },
+          "skew": {
+            "type": "integer",
+            "description": "The number of delay periods that are allowed when validating a TOTP token. This value can either be 0 or 1.",
+            "default": 1
+          }
+        }
+      },
+      "MfaValidateRequest": {
+        "type": "object",
+        "properties": {
+          "mfa_payload": {
+            "type": "object",
+            "description": "A map from MFA method ID to a slice of passcodes or an empty slice if the method does not use passcodes",
+            "format": "map"
+          },
+          "mfa_request_id": {
+            "type": "string",
+            "description": "ID for this MFA request"
+          }
+        },
+        "required": [
+          "mfa_payload",
+          "mfa_request_id"
+        ]
+      },
+      "MfaWriteLoginEnforcementRequest": {
+        "type": "object",
+        "properties": {
+          "auth_method_accessors": {
+            "type": "array",
+            "description": "Array of auth mount accessor IDs",
+            "items": {
+              "type": "string"
+            }
+          },
+          "auth_method_types": {
+            "type": "array",
+            "description": "Array of auth mount types",
+            "items": {
+              "type": "string"
+            }
+          },
+          "identity_entity_ids": {
+            "type": "array",
+            "description": "Array of identity entity IDs",
+            "items": {
+              "type": "string"
+            }
+          },
+          "identity_group_ids": {
+            "type": "array",
+            "description": "Array of identity group IDs",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mfa_method_ids": {
+            "type": "array",
+            "description": "Array of Method IDs that determine what methods will be enforced",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "mfa_method_ids"
+        ]
+      },
+      "MountsEnableSecretsEngineRequest": {
+        "type": "object",
+        "properties": {
+          "config": {
+            "type": "object",
+            "description": "Configuration for this mount, such as default_lease_ttl and max_lease_ttl.",
+            "format": "map"
+          },
+          "description": {
+            "type": "string",
+            "description": "User-friendly description for this mount."
+          },
+          "external_entropy_access": {
+            "type": "boolean",
+            "description": "Whether to give the mount access to Vault's external entropy.",
+            "default": false
+          },
+          "local": {
+            "type": "boolean",
+            "description": "Mark the mount as a local mount, which is not replicated and is unaffected by replication.",
+            "default": false
+          },
+          "options": {
+            "type": "object",
+            "description": "The options to pass into the backend. Should be a json object with string keys and values.",
+            "format": "kvpairs"
+          },
+          "plugin_name": {
+            "type": "string",
+            "description": "Name of the plugin to mount based from the name registered in the plugin catalog."
+          },
+          "plugin_version": {
+            "type": "string",
+            "description": "The semantic version of the plugin to use, or image tag if oci_image is provided."
+          },
+          "seal_wrap": {
+            "type": "boolean",
+            "description": "Whether to turn on seal wrapping for the mount.",
+            "default": false
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the backend. Example: \"passthrough\""
+          }
+        }
+      },
+      "MountsReadConfigurationResponse": {
+        "type": "object",
+        "properties": {
+          "accessor": {
+            "type": "string"
+          },
+          "config": {
+            "type": "object",
+            "description": "Configuration for this mount, such as default_lease_ttl and max_lease_ttl.",
+            "format": "map"
+          },
+          "deprecation_status": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "description": "User-friendly description for this mount."
+          },
+          "external_entropy_access": {
+            "type": "boolean"
+          },
+          "local": {
+            "type": "boolean",
+            "description": "Mark the mount as a local mount, which is not replicated and is unaffected by replication.",
+            "default": false
+          },
+          "options": {
+            "type": "object",
+            "description": "The options to pass into the backend. Should be a json object with string keys and values.",
+            "format": "kvpairs"
+          },
+          "plugin_version": {
+            "type": "string",
+            "description": "The semantic version of the plugin to use, or image tag if oci_image is provided."
+          },
+          "running_plugin_version": {
+            "type": "string"
+          },
+          "running_sha256": {
+            "type": "string"
+          },
+          "seal_wrap": {
+            "type": "boolean",
+            "description": "Whether to turn on seal wrapping for the mount.",
+            "default": false
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the backend. Example: \"passthrough\""
+          },
+          "uuid": {
+            "type": "string"
+          }
+        }
+      },
+      "MountsReadTuningInformationResponse": {
+        "type": "object",
+        "properties": {
+          "allowed_managed_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowed_response_headers": {
+            "type": "array",
+            "description": "A list of headers to whitelist and allow a plugin to set on responses.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "audit_non_hmac_request_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "audit_non_hmac_response_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "default_lease_ttl": {
+            "type": "integer",
+            "description": "The default lease TTL for this mount."
+          },
+          "delegated_auth_accessors": {
+            "type": "array",
+            "description": "A list of auth accessors that the mount is allowed to delegate authentication too",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "User-friendly description for this credential backend."
+          },
+          "external_entropy_access": {
+            "type": "boolean"
+          },
+          "force_no_cache": {
+            "type": "boolean"
+          },
+          "identity_token_key": {
+            "type": "string"
+          },
+          "listing_visibility": {
+            "type": "string"
+          },
+          "max_lease_ttl": {
+            "type": "integer",
+            "description": "The max lease TTL for this mount."
+          },
+          "options": {
+            "type": "object",
+            "description": "The options to pass into the backend. Should be a json object with string keys and values.",
+            "format": "kvpairs"
+          },
+          "passthrough_request_headers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "plugin_version": {
+            "type": "string",
+            "description": "The semantic version of the plugin to use, or image tag if oci_image is provided."
+          },
+          "token_type": {
+            "type": "string",
+            "description": "The type of token to issue (service or batch)."
+          },
+          "user_lockout_counter_reset_duration": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "user_lockout_disable": {
+            "type": "boolean"
+          },
+          "user_lockout_duration": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "user_lockout_threshold": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "MountsTuneConfigurationParametersRequest": {
+        "type": "object",
+        "properties": {
+          "allowed_managed_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowed_response_headers": {
+            "type": "array",
+            "description": "A list of headers to whitelist and allow a plugin to set on responses.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "audit_non_hmac_request_keys": {
+            "type": "array",
+            "description": "The list of keys in the request data object that will not be HMAC'd by audit devices.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "audit_non_hmac_response_keys": {
+            "type": "array",
+            "description": "The list of keys in the response data object that will not be HMAC'd by audit devices.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "default_lease_ttl": {
+            "type": "string",
+            "description": "The default lease TTL for this mount."
+          },
+          "delegated_auth_accessors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "User-friendly description for this credential backend."
+          },
+          "identity_token_key": {
+            "type": "string",
+            "description": "The name of the key used to sign plugin identity tokens. Defaults to the default key."
+          },
+          "listing_visibility": {
+            "type": "string",
+            "description": "Determines the visibility of the mount in the UI-specific listing endpoint. Accepted value are 'unauth' and 'hidden', with the empty default ('') behaving like 'hidden'."
+          },
+          "max_lease_ttl": {
+            "type": "string",
+            "description": "The max lease TTL for this mount."
+          },
+          "options": {
+            "type": "object",
+            "description": "The options to pass into the backend. Should be a json object with string keys and values.",
+            "format": "kvpairs"
+          },
+          "passthrough_request_headers": {
+            "type": "array",
+            "description": "A list of headers to whitelist and pass from the request to the plugin.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "plugin_version": {
+            "type": "string",
+            "description": "The semantic version of the plugin to use, or image tag if oci_image is provided."
+          },
+          "token_type": {
+            "type": "string",
+            "description": "The type of token to issue (service or batch)."
+          },
+          "user_lockout_config": {
+            "type": "object",
+            "description": "The user lockout configuration to pass into the backend. Should be a json object with string keys and values.",
+            "format": "map"
+          }
+        }
+      },
+      "OidcConfigureRequest": {
+        "type": "object",
+        "properties": {
+          "issuer": {
+            "type": "string",
+            "description": "Issuer URL to be used in the iss claim of the token. If not set, Vault's app_addr will be used."
+          }
+        }
+      },
+      "OidcIntrospectRequest": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "description": "Optional client_id to verify"
+          },
+          "token": {
+            "type": "string",
+            "description": "Token to verify"
+          }
+        }
+      },
+      "OidcProviderAuthorizeWithParametersRequest": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "description": "The ID of the requesting client."
+          },
+          "code_challenge": {
+            "type": "string",
+            "description": "The code challenge derived from the code verifier."
+          },
+          "code_challenge_method": {
+            "type": "string",
+            "description": "The method that was used to derive the code challenge. The following methods are supported: 'S256', 'plain'. Defaults to 'plain'.",
+            "default": "plain"
+          },
+          "max_age": {
+            "type": "integer",
+            "description": "The allowable elapsed time in seconds since the last time the end-user was actively authenticated."
+          },
+          "nonce": {
+            "type": "string",
+            "description": "The value that will be returned in the ID token nonce claim after a token exchange."
+          },
+          "redirect_uri": {
+            "type": "string",
+            "description": "The redirection URI to which the response will be sent."
+          },
+          "response_type": {
+            "type": "string",
+            "description": "The OIDC authentication flow to be used. The following response types are supported: 'code'"
+          },
+          "scope": {
+            "type": "string",
+            "description": "A space-delimited, case-sensitive list of scopes to be requested. The 'openid' scope is required."
+          },
+          "state": {
+            "type": "string",
+            "description": "The value used to maintain state between the authentication request and client."
+          }
+        },
+        "required": [
+          "client_id",
+          "redirect_uri",
+          "response_type",
+          "scope"
+        ]
+      },
+      "OidcProviderTokenRequest": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "description": "The ID of the requesting client."
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "The secret of the requesting client."
+          },
+          "code": {
+            "type": "string",
+            "description": "The authorization code received from the provider's authorization endpoint."
+          },
+          "code_verifier": {
+            "type": "string",
+            "description": "The code verifier associated with the authorization code."
+          },
+          "grant_type": {
+            "type": "string",
+            "description": "The authorization grant type. The following grant types are supported: 'authorization_code'."
+          },
+          "redirect_uri": {
+            "type": "string",
+            "description": "The callback location where the authentication response was sent."
+          }
+        },
+        "required": [
+          "code",
+          "grant_type",
+          "redirect_uri"
+        ]
+      },
+      "OidcRotateKeyRequest": {
+        "type": "object",
+        "properties": {
+          "verification_ttl": {
+            "type": "string",
+            "description": "Controls how long the public portion of a key will be available for verification after being rotated. Setting verification_ttl here will override the verification_ttl set on the key.",
+            "format": "duration"
+          }
+        }
+      },
+      "OidcWriteAssignmentRequest": {
+        "type": "object",
+        "properties": {
+          "entity_ids": {
+            "type": "array",
+            "description": "Comma separated string or array of identity entity IDs",
+            "items": {
+              "type": "string"
+            }
+          },
+          "group_ids": {
+            "type": "array",
+            "description": "Comma separated string or array of identity group IDs",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "OidcWriteClientRequest": {
+        "type": "object",
+        "properties": {
+          "access_token_ttl": {
+            "type": "string",
+            "description": "The time-to-live for access tokens obtained by the client.",
+            "format": "duration",
+            "default": "24h"
+          },
+          "assignments": {
+            "type": "array",
+            "description": "Comma separated string or array of assignment resources.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "client_type": {
+            "type": "string",
+            "description": "The client type based on its ability to maintain confidentiality of credentials. The following client types are supported: 'confidential', 'public'. Defaults to 'confidential'.",
+            "default": "confidential"
+          },
+          "id_token_ttl": {
+            "type": "string",
+            "description": "The time-to-live for ID tokens obtained by the client.",
+            "format": "duration",
+            "default": "24h"
+          },
+          "key": {
+            "type": "string",
+            "description": "A reference to a named key resource. Cannot be modified after creation. Defaults to the 'default' key.",
+            "default": "default"
+          },
+          "redirect_uris": {
+            "type": "array",
+            "description": "Comma separated string or array of redirect URIs used by the client. One of these values must exactly match the redirect_uri parameter value used in each authentication request.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "OidcWriteKeyRequest": {
+        "type": "object",
+        "properties": {
+          "algorithm": {
+            "type": "string",
+            "description": "Signing algorithm to use. This will default to RS256.",
+            "default": "RS256"
+          },
+          "allowed_client_ids": {
+            "type": "array",
+            "description": "Comma separated string or array of role client ids allowed to use this key for signing. If empty no roles are allowed. If \"*\" all roles are allowed.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rotation_period": {
+            "type": "string",
+            "description": "How often to generate a new keypair.",
+            "format": "duration",
+            "default": "24h"
+          },
+          "verification_ttl": {
+            "type": "string",
+            "description": "Controls how long the public portion of a key will be available for verification after being rotated.",
+            "format": "duration",
+            "default": "24h"
+          }
+        }
+      },
+      "OidcWriteProviderRequest": {
+        "type": "object",
+        "properties": {
+          "allowed_client_ids": {
+            "type": "array",
+            "description": "The client IDs that are permitted to use the provider",
+            "items": {
+              "type": "string"
+            }
+          },
+          "issuer": {
+            "type": "string",
+            "description": "Specifies what will be used for the iss claim of ID tokens."
+          },
+          "scopes_supported": {
+            "type": "array",
+            "description": "The scopes supported for requesting on the provider",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "OidcWriteRoleRequest": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "description": "Optional client_id"
+          },
+          "key": {
+            "type": "string",
+            "description": "The OIDC key to use for generating tokens. The specified key must already exist."
+          },
+          "template": {
+            "type": "string",
+            "description": "The template string to use for generating tokens. This may be in string-ified JSON or base64 format."
+          },
+          "ttl": {
+            "type": "string",
+            "description": "TTL of the tokens generated against the role.",
+            "format": "duration",
+            "default": "24h"
+          }
+        },
+        "required": [
+          "key"
+        ]
+      },
+      "OidcWriteScopeRequest": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "The description of the scope"
+          },
+          "template": {
+            "type": "string",
+            "description": "The template string to use for the scope. This may be in string-ified JSON or base64 format."
+          }
+        }
+      },
+      "PersonaCreateRequest": {
+        "type": "object",
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "description": "Entity ID to which this persona belongs to"
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the persona"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata to be associated with the persona. In CLI, this parameter can be repeated multiple times, and it all gets merged together. For example: vault <command> <path> metadata=key1=value1 metadata=key2=value2",
+            "format": "kvpairs"
+          },
+          "mount_accessor": {
+            "type": "string",
+            "description": "Mount accessor to which this persona belongs to"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the persona"
+          }
+        }
+      },
+      "PersonaUpdateByIdRequest": {
+        "type": "object",
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "description": "Entity ID to which this persona should be tied to"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata to be associated with the persona. In CLI, this parameter can be repeated multiple times, and it all gets merged together. For example: vault <command> <path> metadata=key1=value1 metadata=key2=value2",
+            "format": "kvpairs"
+          },
+          "mount_accessor": {
+            "type": "string",
+            "description": "Mount accessor to which this persona belongs to"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the persona"
+          }
+        }
+      },
+      "PluginsCatalogListPluginsResponse": {
+        "type": "object",
+        "properties": {
+          "detailed": {
+            "type": "object",
+            "format": "map"
+          }
+        }
+      },
+      "PluginsCatalogListPluginsWithTypeResponse": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "description": "List of plugin names in the catalog",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PluginsCatalogPinsCreatePinnedVersionRequest": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "The semantic version of the plugin to use, or image tag if oci_image is provided."
+          }
+        }
+      },
+      "PluginsCatalogPinsListPinnedVersionsResponse": {
+        "type": "object",
+        "properties": {
+          "pinned_versions": {
+            "type": "object",
+            "format": "map"
+          }
+        }
+      },
+      "PluginsCatalogPinsReadPinnedVersionResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the plugin"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the plugin, may be auth, secret, or database"
+          },
+          "version": {
+            "type": "string",
+            "description": "The semantic version of the plugin to use, or image tag if oci_image is provided."
+          }
+        }
+      },
+      "PluginsCatalogReadPluginConfigurationResponse": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "description": "The args passed to plugin command.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "builtin": {
+            "type": "boolean"
+          },
+          "command": {
+            "type": "string",
+            "description": "The command used to start the plugin. The executable defined in this command must exist in vault's plugin directory."
+          },
+          "deprecation_status": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the plugin"
+          },
+          "oci_image": {
+            "type": "string"
+          },
+          "runtime": {
+            "type": "string",
+            "description": "The Vault plugin runtime to use when running the plugin."
+          },
+          "sha256": {
+            "type": "string",
+            "description": "The SHA256 sum of the executable or container to be run. This should be HEX encoded."
+          },
+          "version": {
+            "type": "string",
+            "description": "The semantic version of the plugin to use, or image tag if oci_image is provided."
+          }
+        }
+      },
+      "PluginsCatalogReadPluginConfigurationWithTypeResponse": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "description": "The args passed to plugin command.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "builtin": {
+            "type": "boolean"
+          },
+          "command": {
+            "type": "string",
+            "description": "The command used to start the plugin. The executable defined in this command must exist in vault's plugin directory."
+          },
+          "deprecation_status": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the plugin"
+          },
+          "oci_image": {
+            "type": "string"
+          },
+          "runtime": {
+            "type": "string",
+            "description": "The Vault plugin runtime to use when running the plugin."
+          },
+          "sha256": {
+            "type": "string",
+            "description": "The SHA256 sum of the executable or container to be run. This should be HEX encoded."
+          },
+          "version": {
+            "type": "string",
+            "description": "The semantic version of the plugin to use, or image tag if oci_image is provided."
+          }
+        }
+      },
+      "PluginsCatalogRegisterPluginRequest": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "description": "The args passed to plugin command.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "command": {
+            "type": "string",
+            "description": "The command used to start the plugin. The executable defined in this command must exist in vault's plugin directory."
+          },
+          "env": {
+            "type": "array",
+            "description": "The environment variables passed to plugin command. Each entry is of the form \"key=value\".",
+            "items": {
+              "type": "string"
+            }
+          },
+          "oci_image": {
+            "type": "string"
+          },
+          "runtime": {
+            "type": "string",
+            "description": "The Vault plugin runtime to use when running the plugin."
+          },
+          "sha256": {
+            "type": "string",
+            "description": "The SHA256 sum of the executable or container to be run. This should be HEX encoded."
+          },
+          "version": {
+            "type": "string",
+            "description": "The semantic version of the plugin to use, or image tag if oci_image is provided."
+          }
+        }
+      },
+      "PluginsCatalogRegisterPluginWithTypeRequest": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "description": "The args passed to plugin command.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "command": {
+            "type": "string",
+            "description": "The command used to start the plugin. The executable defined in this command must exist in vault's plugin directory."
+          },
+          "env": {
+            "type": "array",
+            "description": "The environment variables passed to plugin command. Each entry is of the form \"key=value\".",
+            "items": {
+              "type": "string"
+            }
+          },
+          "oci_image": {
+            "type": "string"
+          },
+          "runtime": {
+            "type": "string",
+            "description": "The Vault plugin runtime to use when running the plugin."
+          },
+          "sha256": {
+            "type": "string",
+            "description": "The SHA256 sum of the executable or container to be run. This should be HEX encoded."
+          },
+          "version": {
+            "type": "string",
+            "description": "The semantic version of the plugin to use, or image tag if oci_image is provided."
+          }
+        }
+      },
+      "PluginsReloadBackendsRequest": {
+        "type": "object",
+        "properties": {
+          "mounts": {
+            "type": "array",
+            "description": "The mount paths of the plugin backends to reload.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "plugin": {
+            "type": "string",
+            "description": "The name of the plugin to reload, as registered in the plugin catalog."
+          },
+          "scope": {
+            "type": "string",
+            "description": "The scope for the reload operation. May be empty or \"global\"."
+          }
+        }
+      },
+      "PluginsReloadBackendsResponse": {
+        "type": "object",
+        "properties": {
+          "reload_id": {
+            "type": "string"
+          }
+        }
+      },
+      "PluginsRuntimesCatalogListPluginsRuntimesResponse": {
+        "type": "object",
+        "properties": {
+          "runtimes": {
+            "type": "array",
+            "description": "List of all plugin runtimes in the catalog",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "PluginsRuntimesCatalogReadPluginRuntimeConfigurationResponse": {
+        "type": "object",
+        "properties": {
+          "cgroup_parent": {
+            "type": "string",
+            "description": "Parent cgroup to set for each container. This can be used to control the total resource usage for a group of plugins."
+          },
+          "cpu_nanos": {
+            "type": "integer",
+            "description": "CPU limit to set per container in nanos. Defaults to no limit.",
+            "format": "int64"
+          },
+          "memory_bytes": {
+            "type": "integer",
+            "description": "Memory limit to set per container in bytes. Defaults to no limit.",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the plugin runtime"
+          },
+          "oci_runtime": {
+            "type": "string",
+            "description": "The OCI-compatible runtime (default \"runsc\")"
+          },
+          "rootless": {
+            "type": "boolean",
+            "description": "Whether the container runtime is run as a non-privileged (non-root) user."
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the plugin runtime"
+          }
+        }
+      },
+      "PluginsRuntimesCatalogRegisterPluginRuntimeRequest": {
+        "type": "object",
+        "properties": {
+          "cgroup_parent": {
+            "type": "string",
+            "description": "Parent cgroup to set for each container. This can be used to control the total resource usage for a group of plugins."
+          },
+          "cpu_nanos": {
+            "type": "integer",
+            "description": "CPU limit to set per container in nanos. Defaults to no limit.",
+            "format": "int64"
+          },
+          "memory_bytes": {
+            "type": "integer",
+            "description": "Memory limit to set per container in bytes. Defaults to no limit.",
+            "format": "int64"
+          },
+          "oci_runtime": {
+            "type": "string",
+            "description": "The OCI-compatible runtime (default \"runsc\")"
+          },
+          "rootless": {
+            "type": "boolean",
+            "description": "Whether the container runtime is run as a non-privileged (non-root) user."
+          }
+        }
+      },
+      "PoliciesGeneratePasswordFromPasswordPolicyResponse": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "PoliciesListAclPolicies2Response": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "policies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PoliciesListAclPolicies3Response": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "policies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PoliciesListAclPoliciesResponse": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "policies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PoliciesReadAclPolicy2Response": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "policy": {
+            "type": "string"
+          },
+          "rules": {
+            "type": "string"
+          }
+        }
+      },
+      "PoliciesReadAclPolicyResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "policy": {
+            "type": "string"
+          },
+          "rules": {
+            "type": "string"
+          }
+        }
+      },
+      "PoliciesReadPasswordPolicyResponse": {
+        "type": "object",
+        "properties": {
+          "policy": {
+            "type": "string"
+          }
+        }
+      },
+      "PoliciesWriteAclPolicy2Request": {
+        "type": "object",
+        "properties": {
+          "policy": {
+            "type": "string",
+            "description": "The rules of the policy."
+          },
+          "rules": {
+            "type": "string",
+            "description": "The rules of the policy.",
+            "deprecated": true
+          }
+        }
+      },
+      "PoliciesWriteAclPolicyRequest": {
+        "type": "object",
+        "properties": {
+          "policy": {
+            "type": "string",
+            "description": "The rules of the policy."
+          }
+        }
+      },
+      "PoliciesWritePasswordPolicyRequest": {
+        "type": "object",
+        "properties": {
+          "policy": {
+            "type": "string",
+            "description": "The password policy"
+          }
+        }
+      },
+      "QueryTokenAccessorCapabilitiesRequest": {
+        "type": "object",
+        "properties": {
+          "accessor": {
+            "type": "string",
+            "description": "Accessor of the token for which capabilities are being queried."
+          },
+          "path": {
+            "type": "array",
+            "description": "Use 'paths' instead.",
+            "items": {
+              "type": "string"
+            },
+            "deprecated": true
+          },
+          "paths": {
+            "type": "array",
+            "description": "Paths on which capabilities are being queried.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "QueryTokenCapabilitiesRequest": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "array",
+            "description": "Use 'paths' instead.",
+            "items": {
+              "type": "string"
+            },
+            "deprecated": true
+          },
+          "paths": {
+            "type": "array",
+            "description": "Paths on which capabilities are being queried.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "token": {
+            "type": "string",
+            "description": "Token for which capabilities are being queried."
+          }
+        }
+      },
+      "QueryTokenSelfCapabilitiesRequest": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "array",
+            "description": "Use 'paths' instead.",
+            "items": {
+              "type": "string"
+            },
+            "deprecated": true
+          },
+          "paths": {
+            "type": "array",
+            "description": "Paths on which capabilities are being queried.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "token": {
+            "type": "string",
+            "description": "Token for which capabilities are being queried."
+          }
+        }
+      },
+      "RateLimitQuotasConfigureRequest": {
+        "type": "object",
+        "properties": {
+          "absolute_rate_limit_exempt_paths": {
+            "type": "array",
+            "description": "Specifies the list of exempt global paths from all rate limit quotas. If empty no global paths will be exempt.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "enable_rate_limit_audit_logging": {
+            "type": "boolean",
+            "description": "If set, starts audit logging of requests that get rejected due to rate limit quota rule violations."
+          },
+          "enable_rate_limit_response_headers": {
+            "type": "boolean",
+            "description": "If set, additional rate limit quota HTTP headers will be added to responses."
+          },
+          "rate_limit_exempt_paths": {
+            "type": "array",
+            "description": "Specifies the list of exempt paths from all rate limit quotas. If empty no paths will be exempt.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RateLimitQuotasReadConfigurationResponse": {
+        "type": "object",
+        "properties": {
+          "absolute_rate_limit_exempt_paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "enable_rate_limit_audit_logging": {
+            "type": "boolean"
+          },
+          "enable_rate_limit_response_headers": {
+            "type": "boolean"
+          },
+          "rate_limit_exempt_paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RateLimitQuotasReadResponse": {
+        "type": "object",
+        "properties": {
+          "block_interval": {
+            "type": "integer"
+          },
+          "inheritable": {
+            "type": "boolean"
+          },
+          "interval": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "rate": {
+            "type": "number",
+            "format": "float"
+          },
+          "role": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "RateLimitQuotasWriteRequest": {
+        "type": "object",
+        "properties": {
+          "block_interval": {
+            "type": "string",
+            "description": "If set, when a client reaches a rate limit threshold, the client will be prohibited from any further requests until after the 'block_interval' has elapsed.",
+            "format": "duration"
+          },
+          "inheritable": {
+            "type": "boolean",
+            "description": "Whether all child namespaces can inherit this namespace quota."
+          },
+          "interval": {
+            "type": "string",
+            "description": "The duration to enforce rate limiting for (default '1s').",
+            "format": "duration"
+          },
+          "path": {
+            "type": "string",
+            "description": "Path of the mount or namespace to apply the quota. A blank path configures a global quota. For example namespace1/ adds a quota to a full namespace, namespace1/auth/userpass adds a quota to userpass in namespace1."
+          },
+          "rate": {
+            "type": "number",
+            "description": "The maximum number of requests in a given interval to be allowed by the quota rule. The 'rate' must be positive.",
+            "format": "float"
+          },
+          "role": {
+            "type": "string",
+            "description": "Login role to apply this quota to. Note that when set, path must be configured to a valid auth method with a concept of roles."
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the quota rule."
+          }
+        }
+      },
+      "RawReadResponse": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "RawWriteRequest": {
+        "type": "object",
+        "properties": {
+          "compressed": {
+            "type": "boolean"
+          },
+          "compression_type": {
+            "type": "string"
+          },
+          "encoding": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "ReadWrappingProperties2Response": {
+        "type": "object",
+        "properties": {
+          "creation_path": {
+            "type": "string"
+          },
+          "creation_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "creation_ttl": {
+            "type": "string",
+            "format": "duration"
+          }
+        }
+      },
+      "ReadWrappingPropertiesRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "ReadWrappingPropertiesResponse": {
+        "type": "object",
+        "properties": {
+          "creation_path": {
+            "type": "string"
+          },
+          "creation_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "creation_ttl": {
+            "type": "string",
+            "format": "duration"
+          }
+        }
+      },
+      "RekeyAttemptInitializeRequest": {
+        "type": "object",
+        "properties": {
+          "backup": {
+            "type": "boolean",
+            "description": "Specifies if using PGP-encrypted keys, whether Vault should also store a plaintext backup of the PGP-encrypted keys."
+          },
+          "pgp_keys": {
+            "type": "array",
+            "description": "Specifies an array of PGP public keys used to encrypt the output unseal keys. Ordering is preserved. The keys must be base64-encoded from their original binary representation. The size of this array must be the same as secret_shares.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "require_verification": {
+            "type": "boolean",
+            "description": "Turns on verification functionality"
+          },
+          "secret_shares": {
+            "type": "integer",
+            "description": "Specifies the number of shares to split the unseal key into."
+          },
+          "secret_threshold": {
+            "type": "integer",
+            "description": "Specifies the number of shares required to reconstruct the unseal key. This must be less than or equal secret_shares. If using Vault HSM with auto-unsealing, this value must be the same as secret_shares."
+          }
+        }
+      },
+      "RekeyAttemptInitializeResponse": {
+        "type": "object",
+        "properties": {
+          "backup": {
+            "type": "boolean"
+          },
+          "n": {
+            "type": "integer"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "pgp_fingerprints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "required": {
+            "type": "integer"
+          },
+          "started": {
+            "type": "boolean"
+          },
+          "t": {
+            "type": "integer"
+          },
+          "verification_nonce": {
+            "type": "string"
+          },
+          "verification_required": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RekeyAttemptReadProgressResponse": {
+        "type": "object",
+        "properties": {
+          "backup": {
+            "type": "boolean"
+          },
+          "n": {
+            "type": "integer"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "pgp_fingerprints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "required": {
+            "type": "integer"
+          },
+          "started": {
+            "type": "boolean"
+          },
+          "t": {
+            "type": "integer"
+          },
+          "verification_nonce": {
+            "type": "string"
+          },
+          "verification_required": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RekeyAttemptUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Specifies a single unseal key share."
+          },
+          "nonce": {
+            "type": "string",
+            "description": "Specifies the nonce of the rekey attempt."
+          }
+        }
+      },
+      "RekeyAttemptUpdateResponse": {
+        "type": "object",
+        "properties": {
+          "backup": {
+            "type": "boolean"
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "keys_base64": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "n": {
+            "type": "integer"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "pgp_fingerprints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "required": {
+            "type": "integer"
+          },
+          "started": {
+            "type": "boolean"
+          },
+          "t": {
+            "type": "integer"
+          },
+          "verification_nonce": {
+            "type": "string"
+          },
+          "verification_required": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RekeyReadBackupKeyResponse": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "object",
+            "format": "map"
+          },
+          "keys_base64": {
+            "type": "object",
+            "format": "map"
+          },
+          "nonce": {
+            "type": "string"
+          }
+        }
+      },
+      "RekeyReadBackupRecoveryKeyResponse": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "object",
+            "format": "map"
+          },
+          "keys_base64": {
+            "type": "object",
+            "format": "map"
+          },
+          "nonce": {
+            "type": "string"
+          }
+        }
+      },
+      "RekeyVerificationCancelResponse": {
+        "type": "object",
+        "properties": {
+          "n": {
+            "type": "integer"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "started": {
+            "type": "boolean"
+          },
+          "t": {
+            "type": "integer"
+          }
+        }
+      },
+      "RekeyVerificationReadProgressResponse": {
+        "type": "object",
+        "properties": {
+          "n": {
+            "type": "integer"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "started": {
+            "type": "boolean"
+          },
+          "t": {
+            "type": "integer"
+          }
+        }
+      },
+      "RekeyVerificationUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Specifies a single unseal share key from the new set of shares."
+          },
+          "nonce": {
+            "type": "string",
+            "description": "Specifies the nonce of the rekey verification operation."
+          }
+        }
+      },
+      "RekeyVerificationUpdateResponse": {
+        "type": "object",
+        "properties": {
+          "complete": {
+            "type": "boolean"
+          },
+          "nonce": {
+            "type": "string"
+          }
+        }
+      },
+      "ReloadPluginsRequest": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string",
+            "description": "The scope for the reload operation. May be empty or \"global\"."
+          }
+        }
+      },
+      "ReloadPluginsResponse": {
+        "type": "object",
+        "properties": {
+          "reload_id": {
+            "type": "string"
+          }
+        }
+      },
+      "RemountRequest": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The previous mount point."
+          },
+          "to": {
+            "type": "string",
+            "description": "The new mount point."
+          }
+        }
+      },
+      "RemountResponse": {
+        "type": "object",
+        "properties": {
+          "migration_id": {
+            "type": "string"
+          }
+        }
+      },
+      "RemountStatusResponse": {
+        "type": "object",
+        "properties": {
+          "migration_id": {
+            "type": "string"
+          },
+          "migration_info": {
+            "type": "object",
+            "format": "map"
+          }
+        }
+      },
+      "RewrapRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "RootTokenGenerationInitialize2Request": {
+        "type": "object",
+        "properties": {
+          "pgp_key": {
+            "type": "string",
+            "description": "Specifies a base64-encoded PGP public key."
+          }
+        }
+      },
+      "RootTokenGenerationInitialize2Response": {
+        "type": "object",
+        "properties": {
+          "complete": {
+            "type": "boolean"
+          },
+          "encoded_root_token": {
+            "type": "string"
+          },
+          "encoded_token": {
+            "type": "string"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "otp": {
+            "type": "string"
+          },
+          "otp_length": {
+            "type": "integer"
+          },
+          "pgp_fingerprint": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "required": {
+            "type": "integer"
+          },
+          "started": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RootTokenGenerationInitializeRequest": {
+        "type": "object",
+        "properties": {
+          "pgp_key": {
+            "type": "string",
+            "description": "Specifies a base64-encoded PGP public key."
+          }
+        }
+      },
+      "RootTokenGenerationInitializeResponse": {
+        "type": "object",
+        "properties": {
+          "complete": {
+            "type": "boolean"
+          },
+          "encoded_root_token": {
+            "type": "string"
+          },
+          "encoded_token": {
+            "type": "string"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "otp": {
+            "type": "string"
+          },
+          "otp_length": {
+            "type": "integer"
+          },
+          "pgp_fingerprint": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "required": {
+            "type": "integer"
+          },
+          "started": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RootTokenGenerationReadProgress2Response": {
+        "type": "object",
+        "properties": {
+          "complete": {
+            "type": "boolean"
+          },
+          "encoded_root_token": {
+            "type": "string"
+          },
+          "encoded_token": {
+            "type": "string"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "otp": {
+            "type": "string"
+          },
+          "otp_length": {
+            "type": "integer"
+          },
+          "pgp_fingerprint": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "required": {
+            "type": "integer"
+          },
+          "started": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RootTokenGenerationReadProgressResponse": {
+        "type": "object",
+        "properties": {
+          "complete": {
+            "type": "boolean"
+          },
+          "encoded_root_token": {
+            "type": "string"
+          },
+          "encoded_token": {
+            "type": "string"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "otp": {
+            "type": "string"
+          },
+          "otp_length": {
+            "type": "integer"
+          },
+          "pgp_fingerprint": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "required": {
+            "type": "integer"
+          },
+          "started": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RootTokenGenerationUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Specifies a single unseal key share."
+          },
+          "nonce": {
+            "type": "string",
+            "description": "Specifies the nonce of the attempt."
+          }
+        }
+      },
+      "RootTokenGenerationUpdateResponse": {
+        "type": "object",
+        "properties": {
+          "complete": {
+            "type": "boolean"
+          },
+          "encoded_root_token": {
+            "type": "string"
+          },
+          "encoded_token": {
+            "type": "string"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "otp": {
+            "type": "string"
+          },
+          "otp_length": {
+            "type": "integer"
+          },
+          "pgp_fingerprint": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "required": {
+            "type": "integer"
+          },
+          "started": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SealStatusResponse": {
+        "type": "object",
+        "properties": {
+          "build_date": {
+            "type": "string"
+          },
+          "cluster_id": {
+            "type": "string"
+          },
+          "cluster_name": {
+            "type": "string"
+          },
+          "hcp_link_resource_ID": {
+            "type": "string"
+          },
+          "hcp_link_status": {
+            "type": "string"
+          },
+          "initialized": {
+            "type": "boolean"
+          },
+          "migration": {
+            "type": "boolean"
+          },
+          "n": {
+            "type": "integer"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "recovery_seal": {
+            "type": "boolean"
+          },
+          "sealed": {
+            "type": "boolean"
+          },
+          "storage_type": {
+            "type": "string"
+          },
+          "t": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "StandardListResponse": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "TokenCreateAgainstRoleRequest": {
+        "type": "object",
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "description": "Name to associate with this token"
+          },
+          "entity_alias": {
+            "type": "string",
+            "description": "Name of the entity alias to associate with this token"
+          },
+          "explicit_max_ttl": {
+            "type": "string",
+            "description": "Explicit Max TTL of this token"
+          },
+          "id": {
+            "type": "string",
+            "description": "Value for the token"
+          },
+          "lease": {
+            "type": "string",
+            "description": "Use 'ttl' instead",
+            "deprecated": true
+          },
+          "meta": {
+            "type": "object",
+            "description": "Arbitrary key=value metadata to associate with the token",
+            "format": "kvpairs"
+          },
+          "no_default_policy": {
+            "type": "boolean",
+            "description": "Do not include default policy for this token"
+          },
+          "no_parent": {
+            "type": "boolean",
+            "description": "Create the token with no parent"
+          },
+          "num_uses": {
+            "type": "integer",
+            "description": "Max number of uses for this token"
+          },
+          "period": {
+            "type": "string",
+            "description": "Renew period"
+          },
+          "policies": {
+            "type": "array",
+            "description": "List of policies for the token",
+            "items": {
+              "type": "string"
+            }
+          },
+          "renewable": {
+            "type": "boolean",
+            "description": "Allow token to be renewed past its initial TTL up to system/mount maximum TTL",
+            "default": true
+          },
+          "ttl": {
+            "type": "string",
+            "description": "Time to live for this token"
+          },
+          "type": {
+            "type": "string",
+            "description": "Token type"
+          }
+        }
+      },
+      "TokenCreateOrphanRequest": {
+        "type": "object",
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "description": "Name to associate with this token"
+          },
+          "entity_alias": {
+            "type": "string",
+            "description": "Name of the entity alias to associate with this token"
+          },
+          "explicit_max_ttl": {
+            "type": "string",
+            "description": "Explicit Max TTL of this token"
+          },
+          "id": {
+            "type": "string",
+            "description": "Value for the token"
+          },
+          "lease": {
+            "type": "string",
+            "description": "Use 'ttl' instead",
+            "deprecated": true
+          },
+          "meta": {
+            "type": "object",
+            "description": "Arbitrary key=value metadata to associate with the token",
+            "format": "kvpairs"
+          },
+          "no_default_policy": {
+            "type": "boolean",
+            "description": "Do not include default policy for this token"
+          },
+          "no_parent": {
+            "type": "boolean",
+            "description": "Create the token with no parent"
+          },
+          "num_uses": {
+            "type": "integer",
+            "description": "Max number of uses for this token"
+          },
+          "period": {
+            "type": "string",
+            "description": "Renew period"
+          },
+          "policies": {
+            "type": "array",
+            "description": "List of policies for the token",
+            "items": {
+              "type": "string"
+            }
+          },
+          "renewable": {
+            "type": "boolean",
+            "description": "Allow token to be renewed past its initial TTL up to system/mount maximum TTL",
+            "default": true
+          },
+          "ttl": {
+            "type": "string",
+            "description": "Time to live for this token"
+          },
+          "type": {
+            "type": "string",
+            "description": "Token type"
+          }
+        }
+      },
+      "TokenCreateRequest": {
+        "type": "object",
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "description": "Name to associate with this token"
+          },
+          "entity_alias": {
+            "type": "string",
+            "description": "Name of the entity alias to associate with this token"
+          },
+          "explicit_max_ttl": {
+            "type": "string",
+            "description": "Explicit Max TTL of this token"
+          },
+          "id": {
+            "type": "string",
+            "description": "Value for the token"
+          },
+          "lease": {
+            "type": "string",
+            "description": "Use 'ttl' instead",
+            "deprecated": true
+          },
+          "meta": {
+            "type": "object",
+            "description": "Arbitrary key=value metadata to associate with the token",
+            "format": "kvpairs"
+          },
+          "no_default_policy": {
+            "type": "boolean",
+            "description": "Do not include default policy for this token"
+          },
+          "no_parent": {
+            "type": "boolean",
+            "description": "Create the token with no parent"
+          },
+          "num_uses": {
+            "type": "integer",
+            "description": "Max number of uses for this token"
+          },
+          "period": {
+            "type": "string",
+            "description": "Renew period"
+          },
+          "policies": {
+            "type": "array",
+            "description": "List of policies for the token",
+            "items": {
+              "type": "string"
+            }
+          },
+          "renewable": {
+            "type": "boolean",
+            "description": "Allow token to be renewed past its initial TTL up to system/mount maximum TTL",
+            "default": true
+          },
+          "ttl": {
+            "type": "string",
+            "description": "Time to live for this token"
+          },
+          "type": {
+            "type": "string",
+            "description": "Token type"
+          }
+        }
+      },
+      "TokenLookUpAccessorRequest": {
+        "type": "object",
+        "properties": {
+          "accessor": {
+            "type": "string",
+            "description": "Accessor of the token to look up (request body)"
+          }
+        }
+      },
+      "TokenLookUpRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Token to lookup"
+          }
+        }
+      },
+      "TokenLookUpSelf2Request": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Token to look up (unused, does not need to be set)"
+          }
+        }
+      },
+      "TokenRenewAccessorRequest": {
+        "type": "object",
+        "properties": {
+          "accessor": {
+            "type": "string",
+            "description": "Accessor of the token to renew (request body)"
+          },
+          "increment": {
+            "type": "string",
+            "description": "The desired increment in seconds to the token expiration",
+            "format": "duration",
+            "default": 0
+          }
+        }
+      },
+      "TokenRenewRequest": {
+        "type": "object",
+        "properties": {
+          "increment": {
+            "type": "string",
+            "description": "The desired increment in seconds to the token expiration",
+            "format": "duration",
+            "default": 0
+          },
+          "token": {
+            "type": "string",
+            "description": "Token to renew (request body)"
+          }
+        }
+      },
+      "TokenRenewSelfRequest": {
+        "type": "object",
+        "properties": {
+          "increment": {
+            "type": "string",
+            "description": "The desired increment in seconds to the token expiration",
+            "format": "duration",
+            "default": 0
+          },
+          "token": {
+            "type": "string",
+            "description": "Token to renew (unused, does not need to be set)"
+          }
+        }
+      },
+      "TokenRevokeAccessorRequest": {
+        "type": "object",
+        "properties": {
+          "accessor": {
+            "type": "string",
+            "description": "Accessor of the token (request body)"
+          }
+        }
+      },
+      "TokenRevokeOrphanRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Token to revoke (request body)"
+          }
+        }
+      },
+      "TokenRevokeRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Token to revoke (request body)"
+          }
+        }
+      },
+      "TokenWriteRoleRequest": {
+        "type": "object",
+        "properties": {
+          "allowed_entity_aliases": {
+            "type": "array",
+            "description": "String or JSON list of allowed entity aliases. If set, specifies the entity aliases which are allowed to be used during token generation. This field supports globbing.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowed_policies": {
+            "type": "array",
+            "description": "If set, tokens can be created with any subset of the policies in this list, rather than the normal semantics of tokens being a subset of the calling token's policies. The parameter is a comma-delimited string of policy names.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowed_policies_glob": {
+            "type": "array",
+            "description": "If set, tokens can be created with any subset of glob matched policies in this list, rather than the normal semantics of tokens being a subset of the calling token's policies. The parameter is a comma-delimited string of policy name globs.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bound_cidrs": {
+            "type": "array",
+            "description": "Use 'token_bound_cidrs' instead.",
+            "items": {
+              "type": "string"
+            },
+            "deprecated": true
+          },
+          "disallowed_policies": {
+            "type": "array",
+            "description": "If set, successful token creation via this role will require that no policies in the given list are requested. The parameter is a comma-delimited string of policy names.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "disallowed_policies_glob": {
+            "type": "array",
+            "description": "If set, successful token creation via this role will require that no requested policies glob match any of policies in this list. The parameter is a comma-delimited string of policy name globs.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "explicit_max_ttl": {
+            "type": "string",
+            "description": "Use 'token_explicit_max_ttl' instead.",
+            "format": "duration",
+            "deprecated": true
+          },
+          "orphan": {
+            "type": "boolean",
+            "description": "If true, tokens created via this role will be orphan tokens (have no parent)"
+          },
+          "path_suffix": {
+            "type": "string",
+            "description": "If set, tokens created via this role will contain the given suffix as a part of their path. This can be used to assist use of the 'revoke-prefix' endpoint later on. The given suffix must match the regular expression.\\w[\\w-.]+\\w"
+          },
+          "period": {
+            "type": "string",
+            "description": "Use 'token_period' instead.",
+            "format": "duration",
+            "deprecated": true
+          },
+          "renewable": {
+            "type": "boolean",
+            "description": "Tokens created via this role will be renewable or not according to this value. Defaults to \"true\".",
+            "default": true
+          },
+          "token_bound_cidrs": {
+            "type": "array",
+            "description": "Comma separated string or JSON list of CIDR blocks. If set, specifies the blocks of IP addresses which are allowed to use the generated token.",
+            "items": {
+              "type": "string"
+            },
+            "x-vault-displayAttrs": {
+              "name": "Generated Token's Bound CIDRs",
+              "description": "A list of CIDR blocks. If set, specifies the blocks of IP addresses which are allowed to use the generated token.",
+              "group": "Tokens"
+            }
+          },
+          "token_explicit_max_ttl": {
+            "type": "string",
+            "description": "If set, tokens created via this role carry an explicit maximum TTL. During renewal, the current maximum TTL values of the role and the mount are not checked for changes, and any updates to these values will have no effect on the token being renewed.",
+            "format": "duration",
+            "x-vault-displayAttrs": {
+              "name": "Generated Token's Explicit Maximum TTL",
+              "group": "Tokens"
+            }
+          },
+          "token_no_default_policy": {
+            "type": "boolean",
+            "description": "If true, the 'default' policy will not automatically be added to generated tokens",
+            "x-vault-displayAttrs": {
+              "name": "Do Not Attach 'default' Policy To Generated Tokens",
+              "group": "Tokens"
+            }
+          },
+          "token_num_uses": {
+            "type": "integer",
+            "description": "The maximum number of times a token may be used, a value of zero means unlimited",
+            "x-vault-displayAttrs": {
+              "name": "Maximum Uses of Generated Tokens",
+              "group": "Tokens"
+            }
+          },
+          "token_period": {
+            "type": "string",
+            "description": "If set, tokens created via this role will have no max lifetime; instead, their renewal period will be fixed to this value. This takes an integer number of seconds, or a string duration (e.g. \"24h\").",
+            "format": "duration",
+            "x-vault-displayAttrs": {
+              "name": "Generated Token's Period",
+              "group": "Tokens"
+            }
+          },
+          "token_type": {
+            "type": "string",
+            "description": "The type of token to generate, service or batch",
+            "default": "default-service",
+            "x-vault-displayAttrs": {
+              "name": "Generated Token's Type",
+              "group": "Tokens"
+            }
+          }
+        }
+      },
+      "UiHeadersConfigureRequest": {
+        "type": "object",
+        "properties": {
+          "multivalue": {
+            "type": "boolean",
+            "description": "Returns multiple values if true"
+          },
+          "values": {
+            "type": "array",
+            "description": "The values to set the header.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "UiHeadersListResponse": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "description": "Lists of configured UI headers. Omitted if list is empty",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "UiHeadersReadConfigurationResponse": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "returns the first header value when `multivalue` request parameter is false"
+          },
+          "values": {
+            "type": "array",
+            "description": "returns all header values when `multivalue` request parameter is true",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "UnsealRequest": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Specifies a single unseal key share. This is required unless reset is true."
+          },
+          "migrate": {
+            "type": "boolean",
+            "description": "Used to migrate the seal from shamir to autoseal or autoseal to shamir. Must be provided on all unseal key calls."
+          },
+          "reset": {
+            "type": "boolean",
+            "description": "Specifies if previously-provided unseal keys are discarded and the unseal process is reset."
+          }
+        }
+      },
+      "UnsealResponse": {
+        "type": "object",
+        "properties": {
+          "build_date": {
+            "type": "string"
+          },
+          "cluster_id": {
+            "type": "string"
+          },
+          "cluster_name": {
+            "type": "string"
+          },
+          "hcp_link_resource_ID": {
+            "type": "string"
+          },
+          "hcp_link_status": {
+            "type": "string"
+          },
+          "initialized": {
+            "type": "boolean"
+          },
+          "migration": {
+            "type": "boolean"
+          },
+          "n": {
+            "type": "integer"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "recovery_seal": {
+            "type": "boolean"
+          },
+          "sealed": {
+            "type": "boolean"
+          },
+          "storage_type": {
+            "type": "string"
+          },
+          "t": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "UnwrapRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "VersionHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "key_info": {
+            "type": "object",
+            "format": "kvpairs"
+          },
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "WellKnownListLabels2Response": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "WellKnownListLabelsResponse": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "WellKnownReadLabelResponse": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "mount_path": {
+            "type": "string"
+          },
+          "mount_uuid": {
+            "type": "string"
+          },
+          "prefix": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
