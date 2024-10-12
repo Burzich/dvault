@@ -87,10 +87,12 @@ func NewServer(addr string) *Server {
 		r.Post("/random/{urlbytes}", nil)
 	})
 
-	r.Post("/sys/seal", nil)
-	r.Get("/sys/seal-status", nil)
-	r.Post("/sys/unseal", nil)
-	r.Get("/sys/health", nil)
+	r.Route("/sys", func(r chi.Router) {
+		r.Post("/seal", nil)
+		r.Get("/seal-status", nil)
+		r.Post("/unseal", nil)
+		r.Get("/health", nil)
+	})
 
 	srv.server.Handler = r
 
