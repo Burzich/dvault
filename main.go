@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/Burzich/dvault/internal/config"
+	"github.com/Burzich/dvault/internal/server"
 	"github.com/jackc/pgx"
 )
 
@@ -33,7 +32,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	http.ListenAndServe(":8080", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Hello World")
-	}))
+	srv := server.NewServer(cfg.Server.Addr)
+	err = srv.ListenAndServe()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
