@@ -12,6 +12,7 @@ type Handler struct {
 }
 
 func (h Handler) GetKVConfig(w http.ResponseWriter, r *http.Request) {
+
 	return
 }
 
