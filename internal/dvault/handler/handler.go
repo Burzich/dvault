@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/Burzich/dvault/internal/dvault"
@@ -135,21 +136,49 @@ func (h Handler) TidyToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Unseal(w http.ResponseWriter, r *http.Request) {
+	var unsealRequest UnsealRequest
+	if err := json.NewDecoder(r.Body).Decode(&unsealRequest); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.dVault.Unseal(r.Context()); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	return
 }
 
 func (h Handler) Seal(w http.ResponseWriter, r *http.Request) {
+	if err := h.dVault.Seal(r.Context()); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	return
 }
 
 func (h Handler) SealStatus(w http.ResponseWriter, r *http.Request) {
+	if err := h.dVault.SealStatus(r.Context()); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	var sealStatus SealStatusResponse
+	if err := json.NewEncoder(w).Encode(sealStatus); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	return
 }
 
 func (h Handler) Health(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 	return
 }
 
-func NewHandler(dvault *dvault.DVault) Handler {
-	return Handler{dVault: dvault}
+func NewHandler(dVault *dvault.DVault) Handler {
+	return Handler{dVault: dVault}
 }

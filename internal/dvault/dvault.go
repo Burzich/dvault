@@ -1,6 +1,9 @@
 package dvault
 
-import "log/slog"
+import (
+	"context"
+	"log/slog"
+)
 
 type DVault struct {
 	EncryptionKey string
@@ -14,10 +17,14 @@ func NewDVault(logger *slog.Logger) *DVault {
 	}
 }
 
-func (d DVault) Unseal() {
-
+func (d DVault) Unseal(ctx context.Context) error {
+	return nil
 }
 
-func (d DVault) Seal() {
+func (d DVault) Seal(ctx context.Context) error {
+	return nil
+}
 
+func (d DVault) SealStatus(ctx context.Context) error {
+	return nil
 }
