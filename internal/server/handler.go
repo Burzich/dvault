@@ -22,31 +22,32 @@ type DVaultHandler interface {
 
 	GetKVSubkeys(w http.ResponseWriter, r *http.Request)
 	CreateKVSubkeys(w http.ResponseWriter, r *http.Request)
-	/*
-		r.Route("/auth/token", func(r chi.Router) {
-			r.Get("accessors/", nil)
-			r.Post("/create", nil)
-			r.Post("/create-orphan", nil)
-			r.Post("/create/{role_name}", nil)
-			r.Get("/lookup", nil)
-			r.Post("/lookup", nil)
-			r.Post("/lookup-accessor", nil)
-			r.Get("/lookup-self", nil)
-			r.Post("/lookup-self", nil)
-			r.Post("/renew", nil)
-			r.Post("/renew-accessor", nil)
-			r.Post("/renew-self", nil)
-			r.Post("/revoke", nil)
-			r.Post("/revoke-accessor", nil)
-			r.Post("/revoke-orphan", nil)
-			r.Post("/revoke-self", nil)
-			r.Get("/roles/", nil)
-			r.Get("/roles/{role_name}", nil)
-			r.Post("/roles/{role_name}", nil)
-			r.Delete("/roles/{role_name}", nil)
-			r.Post("/tidy", nil)
-		})
 
+	GetTokenAccessors(w http.ResponseWriter, r *http.Request)
+	CreateToken(w http.ResponseWriter, r *http.Request)
+	CreateOrphanToken(w http.ResponseWriter, r *http.Request)
+	CreateRoleToken(w http.ResponseWriter, r *http.Request)
+	LookupToken(w http.ResponseWriter, r *http.Request)
+	LookupSelfToken(w http.ResponseWriter, r *http.Request)
+	RenewToken(w http.ResponseWriter, r *http.Request)
+	RenewAccessorToken(w http.ResponseWriter, r *http.Request)
+	RenewSelfToken(w http.ResponseWriter, r *http.Request)
+	RevokeToken(w http.ResponseWriter, r *http.Request)
+	RevokeAccessorToken(w http.ResponseWriter, r *http.Request)
+	RevokeOrphanToken(w http.ResponseWriter, r *http.Request)
+	RevokeSelfToken(w http.ResponseWriter, r *http.Request)
+	GetRolesToken(w http.ResponseWriter, r *http.Request)
+	GetRoleByNameToken(w http.ResponseWriter, r *http.Request)
+	CreateRoleByNameToken(w http.ResponseWriter, r *http.Request)
+	DeleteRoleByNameToken(w http.ResponseWriter, r *http.Request)
+	TidyToken(w http.ResponseWriter, r *http.Request)
+
+	Unseal(w http.ResponseWriter, r *http.Request)
+	Seal(w http.ResponseWriter, r *http.Request)
+	SealStatus(w http.ResponseWriter, r *http.Request)
+	Health(w http.ResponseWriter, r *http.Request)
+
+	/*
 		r.Route("/sys/tools", func(r chi.Router) {
 			r.Post("/hash", nil)
 			r.Post("/hash/{urlalgorithm}", nil)
@@ -56,11 +57,6 @@ type DVaultHandler interface {
 			r.Post("/random/{urlbytes}", nil)
 		})
 
-		r.Route("/sys", func(r chi.Router) {
-			r.Post("/seal", nil)
-			r.Get("/seal-status", nil)
-			r.Post("/unseal", nil)
-			r.Get("/health", nil)
-		})
+
 	*/
 }

@@ -2,8 +2,12 @@ package main
 
 import (
 	"log"
+	"log/slog"
+	"os"
 
 	"github.com/Burzich/dvault/internal/config"
+	"github.com/Burzich/dvault/internal/dvault"
+	"github.com/Burzich/dvault/internal/dvault/handler"
 	"github.com/Burzich/dvault/internal/server"
 	"github.com/jackc/pgx"
 )
@@ -32,7 +36,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	srv := server.NewServer(cfg.Server.Addr)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+
+	vault := dvault.NewDVault(logger)
+	vaultHandler := handler.NewHandler(vault)
+
+	srv := server.NewServer(cfg.Server.Addr, vaultHandler)
 	err = srv.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
