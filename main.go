@@ -1,9 +1,15 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"log"
 	"log/slog"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/Burzich/dvault/internal/config"
 	"github.com/Burzich/dvault/internal/dvault"
@@ -42,8 +48,26 @@ func main() {
 	vaultHandler := handler.NewHandler(vault)
 
 	srv := server.NewServer(cfg.Server.Addr, vaultHandler)
-	err = srv.ListenAndServe()
-	if err != nil {
-		log.Fatal(err)
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	ready := make(chan struct{})
+	go func() {
+		<-ctx.Done()
+		stop()
+		logger.Info("shutdown starting")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			logger.Error("shutdown server", slog.String("error", err.Error()))
+		}
+		ready <- struct{}{}
+	}()
+
+	logger.Info("starting server")
+	if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		logger.Error("http server listen and serve", slog.String("error", err.Error()))
 	}
+	<-ready
+	logger.Info("server shutdown")
 }

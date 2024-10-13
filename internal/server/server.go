@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"net/http/pprof"
 
@@ -103,4 +104,8 @@ func NewServer(addr string, handler DVaultHandler) *Server {
 
 func (s *Server) ListenAndServe() error {
 	return s.server.ListenAndServe()
+}
+
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.server.Shutdown(ctx)
 }
