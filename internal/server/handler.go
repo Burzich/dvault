@@ -6,22 +6,23 @@ import (
 
 type DVaultHandler interface {
 	GetKVConfig(w http.ResponseWriter, r *http.Request)
-	CreateKVConfig(w http.ResponseWriter, r *http.Request)
-
+	UpdateKVConfig(w http.ResponseWriter, r *http.Request)
 	GetKVSecret(w http.ResponseWriter, r *http.Request)
 	CreateKVSecret(w http.ResponseWriter, r *http.Request)
+	UpdateKVSecret(w http.ResponseWriter, r *http.Request)
+	DeleteLatestKVSecret(w http.ResponseWriter, r *http.Request)
 	DeleteKVSecret(w http.ResponseWriter, r *http.Request)
-
-	DeleteKV(w http.ResponseWriter, r *http.Request)
-	DestroyKV(w http.ResponseWriter, r *http.Request)
-
+	DestroyKVSecret(w http.ResponseWriter, r *http.Request)
 	GetKVMetadata(w http.ResponseWriter, r *http.Request)
-	CreateKVMetadata(w http.ResponseWriter, r *http.Request)
-	DeleteKVMetadata(w http.ResponseWriter, r *http.Request)
 	UpdateKVMetadata(w http.ResponseWriter, r *http.Request)
-
+	DeleteKVMetadata(w http.ResponseWriter, r *http.Request)
 	GetKVSubkeys(w http.ResponseWriter, r *http.Request)
 	CreateKVSubkeys(w http.ResponseWriter, r *http.Request)
+
+	GetMounts(w http.ResponseWriter, r *http.Request)
+	GetMount(w http.ResponseWriter, r *http.Request)
+	CreateMount(w http.ResponseWriter, r *http.Request)
+	DeleteMount(w http.ResponseWriter, r *http.Request)
 
 	GetTokenAccessors(w http.ResponseWriter, r *http.Request)
 	CreateToken(w http.ResponseWriter, r *http.Request)
@@ -46,17 +47,4 @@ type DVaultHandler interface {
 	Seal(w http.ResponseWriter, r *http.Request)
 	SealStatus(w http.ResponseWriter, r *http.Request)
 	Health(w http.ResponseWriter, r *http.Request)
-
-	/*
-		r.Route("/sys/tools", func(r chi.Router) {
-			r.Post("/hash", nil)
-			r.Post("/hash/{urlalgorithm}", nil)
-			r.Post("/random", nil)
-			r.Post("/random/{source}", nil)
-			r.Post("/random/{source}/{urlbytes}", nil)
-			r.Post("/random/{urlbytes}", nil)
-		})
-
-
-	*/
 }

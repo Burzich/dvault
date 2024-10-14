@@ -12,6 +12,7 @@ type Config struct {
 	LoggerLevel string `json:"logger_level" validate:"required,oneof=DEBUG INFO WARN ERROR" env:"LOGGER_LEVEL"`
 	Server      `json:"server"`
 	Postgres    `json:"postgres"`
+	Storage     `json:"storage"`
 }
 
 type Postgres struct {
@@ -22,11 +23,16 @@ type Server struct {
 	Addr string `json:"addr" validate:"required,hostname_port" env:"PORT"`
 }
 
+type Storage struct {
+	MountPath string `json:"mount_path" validate:"required" env:"MOUNT_PATH"`
+}
+
 func Default() (Config, error) {
 	return Config{
 		LoggerLevel: "DEBUG",
 		Server:      Server{Addr: ":8080"},
 		Postgres:    Postgres{Addr: "postgres://postgres:password@localhost:5432/vault"},
+		Storage:     Storage{MountPath: "/data"},
 	}, nil
 }
 

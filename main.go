@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	cfg, err := config.Default()
+	cfg, err := config.ReadEnv()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,7 +44,7 @@ func main() {
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 
-	vault := dvault.NewDVault(logger)
+	vault := dvault.NewDVault(logger, cfg.MountPath)
 	vaultHandler := handler.NewHandler(vault)
 
 	srv := server.NewServer(cfg.Server.Addr, vaultHandler)

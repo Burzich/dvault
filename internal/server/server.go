@@ -14,87 +14,95 @@ type Server struct {
 	handler DVaultHandler
 }
 
-func NewServer(addr string, handler DVaultHandler) *Server {
+func NewServer(addr string, h DVaultHandler) *Server {
 	srv := &Server{
 		server: http.Server{
 			Addr: addr,
 		},
-		handler: handler,
+		handler: h,
 	}
 
 	r := chi.NewMux()
-	r.Get("/metrics", promhttp.Handler().ServeHTTP)
-	r.HandleFunc("/pprof/*", pprof.Index)
-	r.HandleFunc("/pprof/cmdline", pprof.Cmdline)
-	r.HandleFunc("/pprof/profile", pprof.Profile)
-	r.HandleFunc("/pprof/symbol", pprof.Symbol)
-	r.HandleFunc("/pprof/trace", pprof.Trace)
 
-	r.Handle("/pprof/goroutine", pprof.Handler("goroutine"))
-	r.Handle("/pprof/threadcreate", pprof.Handler("threadcreate"))
-	r.Handle("/pprof/mutex", pprof.Handler("mutex"))
-	r.Handle("/pprof/heap", pprof.Handler("heap"))
-	r.Handle("/pprof/block", pprof.Handler("block"))
-	r.Handle("/pprof/allocs", pprof.Handler("allocs"))
+	r.Route("/v1", func(r chi.Router) {
+		r.Get("/metrics", promhttp.Handler().ServeHTTP)
+		r.HandleFunc("/pprof/*", pprof.Index)
+		r.HandleFunc("/pprof/cmdline", pprof.Cmdline)
+		r.HandleFunc("/pprof/profile", pprof.Profile)
+		r.HandleFunc("/pprof/symbol", pprof.Symbol)
+		r.HandleFunc("/pprof/trace", pprof.Trace)
 
-	r.Route("/kv", func(r chi.Router) {
-		r.Get("/config", handler.GetKVConfig)
-		r.Post("/config", handler.CreateKVConfig)
+		r.Handle("/pprof/goroutine", pprof.Handler("goroutine"))
+		r.Handle("/pprof/threadcreate", pprof.Handler("threadcreate"))
+		r.Handle("/pprof/mutex", pprof.Handler("mutex"))
+		r.Handle("/pprof/heap", pprof.Handler("heap"))
+		r.Handle("/pprof/block", pprof.Handler("block"))
+		r.Handle("/pprof/allocs", pprof.Handler("allocs"))
 
-		r.Get("/data/{path}", handler.GetKVSecret)
-		r.Post("/data/{path}", handler.CreateKVSecret)
-		r.Delete("/data/{path}", handler.DeleteKVSecret)
+		r.Route("/{mount}", func(r chi.Router) {
+			r.Get("/config", h.GetKVConfig)
+			r.Post("/config", h.UpdateKVConfig)
 
-		r.Post("/delete/{key}", handler.DeleteKV)
-		r.Post("/destroy/{key}", handler.DestroyKV)
+			r.Get("/data/{path}", h.GetKVSecret)
+			r.Post("/data/{path}", h.CreateKVSecret)
+			r.Put("/data/{path}", h.UpdateKVSecret)
+			r.Delete("/data/{path}", h.DeleteLatestKVSecret)
 
-		r.Get("/metadata/{path}", handler.GetKVMetadata)
-		r.Post("/metadata/{path}", handler.CreateKVMetadata)
-		r.Delete("/metadata/{path}", handler.DeleteKVMetadata)
-		r.Get("/metadata/{path}/", nil)
+			r.Post("/delete/{path}", h.DeleteKVSecret)
+			r.Post("/destroy/{path}", h.DestroyKVSecret)
 
-		r.Get("/subkeys/{path}", handler.GetKVSubkeys)
-		r.Post("/subkeys/{path}", handler.CreateKVSubkeys)
-	})
+			r.Get("/metadata/{path}", h.GetKVMetadata)
+			r.Post("/metadata/{path}", h.UpdateKVMetadata)
+			r.Delete("/metadata/{path}", h.DeleteKVMetadata)
 
-	r.Route("/auth/token", func(r chi.Router) {
-		r.Get("accessors/", handler.GetTokenAccessors)
-		r.Post("/create", handler.CreateToken)
-		r.Post("/create-orphan", handler.CreateOrphanToken)
-		r.Post("/create/{role_name}", handler.CreateRoleToken)
-		r.Get("/lookup", handler.LookupToken)
-		r.Post("/lookup", nil)
-		r.Post("/lookup-accessor", nil)
-		r.Get("/lookup-self", handler.LookupToken)
-		r.Post("/lookup-self", handler.LookupSelfToken)
-		r.Post("/renew", handler.RenewToken)
-		r.Post("/renew-accessor", handler.RenewAccessorToken)
-		r.Post("/renew-self", handler.RenewSelfToken)
-		r.Post("/revoke", handler.RevokeToken)
-		r.Post("/revoke-accessor", handler.RevokeAccessorToken)
-		r.Post("/revoke-orphan", handler.RevokeOrphanToken)
-		r.Post("/revoke-self", handler.RevokeSelfToken)
-		r.Get("/roles/", handler.GetRolesToken)
-		r.Get("/roles/{role_name}", handler.GetRoleByNameToken)
-		r.Post("/roles/{role_name}", handler.CreateRoleByNameToken)
-		r.Delete("/roles/{role_name}", handler.DeleteRoleByNameToken)
-		r.Post("/tidy", handler.TidyToken)
-	})
+			r.Get("/subkeys/{path}", h.GetKVSubkeys)
+			r.Post("/subkeys/{path}", h.CreateKVSubkeys)
+		})
 
-	r.Route("/sys/tools", func(r chi.Router) {
-		r.Post("/hash", nil)
-		r.Post("/hash/{urlalgorithm}", nil)
-		r.Post("/random", nil)
-		r.Post("/random/{source}", nil)
-		r.Post("/random/{source}/{urlbytes}", nil)
-		r.Post("/random/{urlbytes}", nil)
-	})
+		r.Route("/auth/token", func(r chi.Router) {
+			r.Get("/accessors/", h.GetTokenAccessors)
+			r.Post("/create", h.CreateToken)
+			r.Post("/create-orphan", h.CreateOrphanToken)
+			r.Post("/create/{role_name}", h.CreateRoleToken)
+			r.Get("/lookup", h.LookupToken)
+			r.Post("/lookup", nil)
+			r.Post("/lookup-accessor", nil)
+			r.Get("/lookup-self", h.LookupToken)
+			r.Post("/lookup-self", h.LookupSelfToken)
+			r.Post("/renew", h.RenewToken)
+			r.Post("/renew-accessor", h.RenewAccessorToken)
+			r.Post("/renew-self", h.RenewSelfToken)
+			r.Post("/revoke", h.RevokeToken)
+			r.Post("/revoke-accessor", h.RevokeAccessorToken)
+			r.Post("/revoke-orphan", h.RevokeOrphanToken)
+			r.Post("/revoke-self", h.RevokeSelfToken)
+			r.Get("/roles/", h.GetRolesToken)
+			r.Get("/roles/{role_name}", h.GetRoleByNameToken)
+			r.Post("/roles/{role_name}", h.CreateRoleByNameToken)
+			r.Delete("/roles/{role_name}", h.DeleteRoleByNameToken)
+			r.Post("/tidy", h.TidyToken)
+		})
 
-	r.Route("/sys", func(r chi.Router) {
-		r.Post("/seal", handler.Seal)
-		r.Get("/seal-status", handler.SealStatus)
-		r.Post("/unseal", handler.Unseal)
-		r.Get("/health", handler.Health)
+		r.Route("/sys/tools", func(r chi.Router) {
+			r.Post("/hash", nil)
+			r.Post("/hash/{urlalgorithm}", nil)
+			r.Post("/random", nil)
+			r.Post("/random/{source}", nil)
+			r.Post("/random/{source}/{urlbytes}", nil)
+			r.Post("/random/{urlbytes}", nil)
+		})
+
+		r.Route("/sys", func(r chi.Router) {
+			r.Get("/mounts", h.GetMounts)
+			r.Get("/mounts/{path}", h.GetMount)
+			r.Post("/mounts/{path}", h.CreateMount)
+			r.Delete("/mounts/{path}", h.DeleteMount)
+
+			r.Post("/seal", h.Seal)
+			r.Get("/seal-status", h.SealStatus)
+			r.Post("/unseal", h.Unseal)
+			r.Get("/health", h.Health)
+		})
 	})
 
 	srv.server.Handler = r
