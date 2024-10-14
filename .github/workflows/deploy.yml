@@ -1,0 +1,46 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_deploy_to_staging:
+    name: Build and deploy
+    runs-on: self-hosted
+    timeout-minutes: 30
+    env:
+      PORT: "8080"
+      DB: "${{ secrets.DB }}"
+      CONTAINER_NAME: "handle_vault"
+      IMAGE_NAME: "handle_vault_image"
+    steps:
+      - name: Check for actual
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: >
+          docker build
+          -t ${{ env.IMAGE_NAME }}:latest
+          --no-cache
+          .
+      - name: Stop previous
+        run: >
+          CONTAINER_EXISTS=$(docker ps -a --format '{{.Names}}' --filter "name=${{ env.CONTAINER_NAME }}" -a | wc -w);
+          if  [[ $CONTAINER_EXISTS != 0 ]] ;
+          then docker container stop ${{ env.CONTAINER_NAME }};
+          docker container rm ${{ env.CONTAINER_NAME }};
+          else echo "Container ${{ env.CONTAINER_NAME }} does not exist";
+          fi
+      - name: Run container
+        run: >
+          docker run
+          --restart unless-stopped
+          --name ${{ env.CONTAINER_NAME }}
+          --network docker_network
+          -p ${{ env.PORT }}:${{ env.PORT }}
+          -d
+          --env PORT=:${{ env.PORT }}
+          --env DB=${{ env.DB }}
+          ${{ env.IMAGE_NAME }}
+      - name: Perform cleanup
+        run: docker system prune -f
