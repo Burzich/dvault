@@ -25,13 +25,6 @@ func NewServer(addr string, h DVaultHandler) *Server {
 	r := chi.NewMux()
 
 	r.Route("/v1", func(r chi.Router) {
-		r.Handle("/pprof/goroutine", pprof.Handler("goroutine"))
-		r.Handle("/pprof/threadcreate", pprof.Handler("threadcreate"))
-		r.Handle("/pprof/mutex", pprof.Handler("mutex"))
-		r.Handle("/pprof/heap", pprof.Handler("heap"))
-		r.Handle("/pprof/block", pprof.Handler("block"))
-		r.Handle("/pprof/allocs", pprof.Handler("allocs"))
-
 		r.Route("/{mount}", func(r chi.Router) {
 			r.Get("/config", h.GetKVConfig)
 			r.Post("/config", h.UpdateKVConfig)
@@ -103,6 +96,12 @@ func NewServer(addr string, h DVaultHandler) *Server {
 			r.HandleFunc("/pprof/profile", pprof.Profile)
 			r.HandleFunc("/pprof/symbol", pprof.Symbol)
 			r.HandleFunc("/pprof/trace", pprof.Trace)
+			r.Handle("/pprof/goroutine", pprof.Handler("goroutine"))
+			r.Handle("/pprof/threadcreate", pprof.Handler("threadcreate"))
+			r.Handle("/pprof/mutex", pprof.Handler("mutex"))
+			r.Handle("/pprof/heap", pprof.Handler("heap"))
+			r.Handle("/pprof/block", pprof.Handler("block"))
+			r.Handle("/pprof/allocs", pprof.Handler("allocs"))
 		})
 	})
 
