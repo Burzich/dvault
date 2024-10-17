@@ -25,13 +25,6 @@ func NewServer(addr string, h DVaultHandler) *Server {
 	r := chi.NewMux()
 
 	r.Route("/v1", func(r chi.Router) {
-		r.Get("/metrics", promhttp.Handler().ServeHTTP)
-		r.HandleFunc("/pprof/*", pprof.Index)
-		r.HandleFunc("/pprof/cmdline", pprof.Cmdline)
-		r.HandleFunc("/pprof/profile", pprof.Profile)
-		r.HandleFunc("/pprof/symbol", pprof.Symbol)
-		r.HandleFunc("/pprof/trace", pprof.Trace)
-
 		r.Handle("/pprof/goroutine", pprof.Handler("goroutine"))
 		r.Handle("/pprof/threadcreate", pprof.Handler("threadcreate"))
 		r.Handle("/pprof/mutex", pprof.Handler("mutex"))
@@ -103,6 +96,13 @@ func NewServer(addr string, h DVaultHandler) *Server {
 			r.Post("/unseal", h.Unseal)
 			r.Post("/init", h.Init)
 			r.Get("/health", h.Health)
+
+			r.Get("/metrics", promhttp.Handler().ServeHTTP)
+			r.HandleFunc("/pprof/*", pprof.Index)
+			r.HandleFunc("/pprof/cmdline", pprof.Cmdline)
+			r.HandleFunc("/pprof/profile", pprof.Profile)
+			r.HandleFunc("/pprof/symbol", pprof.Symbol)
+			r.HandleFunc("/pprof/trace", pprof.Trace)
 		})
 	})
 

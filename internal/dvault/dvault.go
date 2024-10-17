@@ -203,6 +203,7 @@ func (d *DVault) Init(_ context.Context, init Init) (InitResponse, error) {
 }
 
 func (d *DVault) SealStatus(ctx context.Context) (SealStatus, error) {
+
 	return SealStatus{
 		Type:         "shamir",
 		Initialized:  d.isInitialized.Load(),
