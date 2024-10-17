@@ -101,6 +101,7 @@ func NewServer(addr string, h DVaultHandler) *Server {
 			r.Post("/seal", h.Seal)
 			r.Get("/seal-status", h.SealStatus)
 			r.Post("/unseal", h.Unseal)
+			r.Post("/init", h.Init)
 			r.Get("/health", h.Health)
 		})
 	})

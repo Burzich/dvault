@@ -379,7 +379,11 @@ func (h Handler) Unseal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := h.dVault.Unseal(r.Context())
+	response, err := h.dVault.Unseal(r.Context(), dvault.Unseal{
+		Key:     unsealRequest.Key,
+		Migrate: unsealRequest.Migrate,
+		Reset:   unsealRequest.Reset,
+	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -409,14 +413,43 @@ func (h Handler) Seal(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) SealStatus(w http.ResponseWriter, r *http.Request) {
-	_, err := h.dVault.SealStatus(r.Context())
+	sealStatus, err := h.dVault.SealStatus(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	var sealStatus SealStatusResponse
 	if err := json.NewEncoder(w).Encode(sealStatus); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	return
+}
+
+func (h Handler) Init(w http.ResponseWriter, r *http.Request) {
+	var initRequest InitRequest
+	if err := json.NewDecoder(r.Body).Decode(&initRequest); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	response, err := h.dVault.Init(r.Context(), dvault.Init{
+		PgpKeys:           initRequest.PgpKeys,
+		RecoveryPgpKeys:   initRequest.RecoveryPgpKeys,
+		RecoveryShares:    initRequest.RecoveryShares,
+		RecoveryThreshold: initRequest.RecoveryThreshold,
+		RootTokenPgpKey:   initRequest.RootTokenPgpKey,
+		SecretShares:      initRequest.SecretShares,
+		SecretThreshold:   initRequest.SecretThreshold,
+		StoredShares:      initRequest.StoredShares,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

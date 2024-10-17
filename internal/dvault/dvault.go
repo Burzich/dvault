@@ -2,16 +2,23 @@ package dvault
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	kv2 "github.com/Burzich/dvault/internal/dvault/kv"
 	"github.com/Burzich/dvault/internal/dvault/kv/disc"
 	"github.com/Burzich/dvault/internal/dvault/tools"
+	"github.com/cloudflare/circl/group"
+	"github.com/cloudflare/circl/secretsharing"
 )
 
 type DVault struct {
@@ -19,29 +26,183 @@ type DVault struct {
 	Logger        *slog.Logger
 	mountPath     string
 
+	buildDate     time.Time
+	isSealed      atomic.Bool
+	isInitialized atomic.Bool
+
 	mu sync.RWMutex
-	kv map[string]kv2.KV
+
+	kv         map[string]kv2.KV
+	shareKeys  []string
+	N          int
+	T          int
+	commitment secretsharing.SecretCommitment
 }
 
 func NewDVault(logger *slog.Logger, mountPath string) *DVault {
-	return &DVault{
-		EncryptionKey: "",
-		mountPath:     mountPath,
+	d := DVault{
 		Logger:        logger,
+		mountPath:     mountPath,
+		buildDate:     time.Now(),
+		isSealed:      atomic.Bool{},
+		isInitialized: atomic.Bool{},
+		mu:            sync.RWMutex{},
 		kv:            make(map[string]kv2.KV),
+		shareKeys:     nil,
+		N:             0,
+		T:             0,
+		commitment:    nil,
 	}
+
+	d.isSealed.Store(true)
+
+	return &d
 }
 
-func (d *DVault) Unseal(ctx context.Context) (Response, error) {
-	return Response{}, nil
+func (d *DVault) Unseal(ctx context.Context, unseal Unseal) (UnsealResponse, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	if d.isInitialized.Load() {
+		return UnsealResponse{}, errors.New("already unsealed")
+	}
+
+	if unseal.Reset {
+		d.shareKeys = make([]string, 0)
+	}
+
+	d.shareKeys = append(d.shareKeys, unseal.Key)
+
+	if len(d.shareKeys) == d.T {
+		err := d.tryUnseal(d.shareKeys)
+		if err != nil {
+			return UnsealResponse{}, err
+		}
+
+		d.isSealed.Store(false)
+
+		return UnsealResponse{
+			BuildDate:         d.buildDate.String(),
+			ClusterId:         "dvault",
+			ClusterName:       "dvault",
+			HcpLinkResourceID: "",
+			HcpLinkStatus:     "",
+			Initialized:       d.isInitialized.Load(),
+			Migration:         false,
+			N:                 d.N,
+			T:                 d.T,
+			Progress:          0,
+			Nonce:             "",
+			RecoverySeal:      false,
+			Sealed:            d.isSealed.Load(),
+			StorageType:       "file",
+			Type:              "shamir",
+			Version:           "1.0.0",
+		}, nil
+	}
+
+	return UnsealResponse{
+		BuildDate:         d.buildDate.String(),
+		ClusterId:         "dvault",
+		ClusterName:       "dvault",
+		HcpLinkResourceID: "",
+		HcpLinkStatus:     "",
+		Initialized:       d.isInitialized.Load(),
+		Migration:         false,
+		N:                 d.N,
+		T:                 d.T,
+		Progress:          len(d.shareKeys),
+		Nonce:             "",
+		RecoverySeal:      false,
+		Sealed:            d.isSealed.Load(),
+		StorageType:       "file",
+		Type:              "shamir",
+		Version:           "1.0.0",
+	}, nil
 }
 
 func (d *DVault) Seal(ctx context.Context) (Response, error) {
-	return Response{}, nil
+	var response Response
+	response.RequestId = tools.GenerateXRequestID()
+
+	d.isSealed.Store(true)
+
+	return response, nil
 }
 
-func (d *DVault) SealStatus(ctx context.Context) (Response, error) {
-	return Response{}, nil
+func (d *DVault) Init(_ context.Context, init Init) (InitResponse, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	g := group.P256
+	t := uint(2)
+	n := uint(5)
+
+	if init.SecretShares != 0 {
+		n = uint(init.SecretShares)
+	}
+	if init.SecretThreshold != 0 {
+		t = uint(init.SecretThreshold)
+	}
+
+	secret := g.RandomScalar(rand.Reader)
+	ss := secretsharing.New(rand.Reader, t, secret)
+	shares := ss.Share(n)
+
+	com := ss.CommitSecret()
+
+	var sharesValuesBase64 []string
+
+	for _, share := range shares {
+		shareValueBytes, err := share.Value.MarshalBinary()
+		if err != nil {
+			return InitResponse{}, err
+		}
+		shareIdBytes, err := share.ID.MarshalBinary()
+		if err != nil {
+			return InitResponse{}, err
+		}
+
+		shareValueBase64 := base64.StdEncoding.EncodeToString(shareValueBytes)
+		shareIdBase64 := base64.StdEncoding.EncodeToString(shareIdBytes)
+		sharesValuesBase64 = append(sharesValuesBase64, shareValueBase64+"#"+shareIdBase64)
+	}
+
+	secretBytes, err := secret.MarshalBinary()
+	if err != nil {
+		return InitResponse{}, err
+	}
+
+	err = d.generateAndSaveEncryptKey(secretBytes, n, t)
+	if err != nil {
+		return InitResponse{}, err
+	}
+	d.commitment = com
+
+	return InitResponse{
+		Keys:       sharesValuesBase64,
+		KeysBase64: sharesValuesBase64,
+		RootToken:  base64.StdEncoding.EncodeToString(secretBytes),
+	}, nil
+}
+
+func (d *DVault) SealStatus(ctx context.Context) (SealStatus, error) {
+	return SealStatus{
+		Type:         "shamir",
+		Initialized:  d.isInitialized.Load(),
+		Sealed:       d.isSealed.Load(),
+		T:            d.T,
+		N:            d.N,
+		Progress:     len(d.shareKeys),
+		Nonce:        "",
+		Version:      "1.0.0",
+		BuildDate:    d.buildDate,
+		Migration:    false,
+		ClusterName:  "dvault",
+		ClusterId:    "dvault",
+		RecoverySeal: false,
+		StorageType:  "file",
+	}, nil
 }
 
 func (d *DVault) GetKVSecret(ctx context.Context, mount string, secretPath string) (Response, error) {
@@ -365,4 +526,101 @@ func (d *DVault) CreateMount(_ context.Context, path string, mount CreateMount) 
 	response.MountType = "kv"
 
 	return response, nil
+}
+
+func (d *DVault) generateAndSaveEncryptKey(secret []byte, shares uint, threshold uint) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	encryptKey := make([]byte, 256)
+	_, err := rand.Read(encryptKey)
+	if err != nil {
+		return err
+	}
+
+	encryptedEncryptedKey, err := tools.Encrypt(encryptKey, secret)
+	if err != nil {
+		return err
+	}
+
+	encryptedEncryptedKeyBase64 := base64.StdEncoding.EncodeToString(encryptedEncryptedKey)
+	keyPath := filepath.Join(d.mountPath, "key")
+	err = os.WriteFile(keyPath, []byte(encryptedEncryptedKeyBase64), 0600)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *DVault) tryUnseal(keysBase64Encoded []string) error {
+	valueKeys := make([][]byte, len(keysBase64Encoded))
+	idKeys := make([][]byte, len(keysBase64Encoded))
+	for i := range valueKeys {
+		valueBase64, idBase64, ok := strings.Cut(keysBase64Encoded[i], "#")
+		if !ok {
+			return errors.New("invalid share")
+		}
+
+		{
+			base64Text := make([]byte, base64.StdEncoding.DecodedLen(len(valueBase64)))
+
+			n, err := base64.StdEncoding.Decode(base64Text, []byte(valueBase64))
+			if err != nil {
+				return err
+			}
+
+			valueKeys[i] = base64Text[:n]
+		}
+		{
+			base64Text := make([]byte, base64.StdEncoding.DecodedLen(len(idBase64)))
+
+			n, err := base64.StdEncoding.Decode(base64Text, []byte(idBase64))
+			if err != nil {
+				return err
+			}
+
+			idKeys[i] = base64Text[:n]
+		}
+	}
+
+	var values []group.Scalar
+	for i := range valueKeys {
+		g := group.P256
+		scalar := g.NewScalar()
+		err := scalar.UnmarshalBinary(valueKeys[i])
+		if err != nil {
+			return err
+		}
+		values = append(values, scalar)
+	}
+
+	var ids []group.Scalar
+	for i := range idKeys {
+		g := group.P256
+		scalar := g.NewScalar()
+		err := scalar.UnmarshalBinary(idKeys[i])
+		if err != nil {
+			return err
+		}
+		ids = append(values, scalar)
+	}
+
+	var shares []secretsharing.Share
+	for i := range valueKeys {
+		shares = append(shares, secretsharing.Share{
+			ID:    ids[i],
+			Value: values[i],
+		})
+	}
+
+	for i := range shares {
+		ok := secretsharing.Verify(uint(d.T), shares[i], d.commitment)
+		if !ok {
+			return errors.New("invalid share")
+		}
+	}
+
+	return nil
 }

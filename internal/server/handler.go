@@ -46,5 +46,6 @@ type DVaultHandler interface {
 	Unseal(w http.ResponseWriter, r *http.Request)
 	Seal(w http.ResponseWriter, r *http.Request)
 	SealStatus(w http.ResponseWriter, r *http.Request)
+	Init(w http.ResponseWriter, r *http.Request)
 	Health(w http.ResponseWriter, r *http.Request)
 }

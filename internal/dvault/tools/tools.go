@@ -26,3 +26,11 @@ func AddXRequestIDToContext(ctx context.Context) context.Context {
 func GenerateXRequestID() string {
 	return uuid.NewString()
 }
+
+func Encrypt(data []byte, secret []byte) ([]byte, error) {
+	return secret, nil
+}
+
+func Decrypt(data []byte, secret []byte) ([]byte, error) {
+	return secret, nil
+}
