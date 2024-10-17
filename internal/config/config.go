@@ -61,6 +61,10 @@ func ReadEnv() (Config, error) {
 		return Config{}, err
 	}
 
+	if cfg.LoggerLevel == "" {
+		cfg.LoggerLevel = "INFO"
+	}
+
 	if err := validator.New().Struct(cfg); err != nil {
 		return Config{}, err
 	}
