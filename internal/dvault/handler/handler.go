@@ -2,6 +2,8 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -429,7 +431,7 @@ func (h Handler) SealStatus(w http.ResponseWriter, r *http.Request) {
 
 func (h Handler) Init(w http.ResponseWriter, r *http.Request) {
 	var initRequest InitRequest
-	if err := json.NewDecoder(r.Body).Decode(&initRequest); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&initRequest); err != nil && !errors.Is(err, io.EOF) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

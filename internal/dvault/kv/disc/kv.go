@@ -18,11 +18,11 @@ import (
 type KV struct {
 	configPath    string
 	dataPath      string
-	encryptionKey string
+	encryptionKey []byte
 	m             sync.Mutex
 }
 
-func NewKV(configPath string, dataPath string, config kv.KVConfig, encryptionKey string) (*KV, error) {
+func NewKV(configPath string, dataPath string, config kv.KVConfig, encryptionKey []byte) (*KV, error) {
 	k := KV{
 		configPath:    configPath,
 		dataPath:      dataPath,
@@ -41,6 +41,16 @@ func NewKV(configPath string, dataPath string, config kv.KVConfig, encryptionKey
 	err = k.writeConfig(config)
 	if err != nil {
 		return nil, err
+	}
+
+	return &k, nil
+}
+
+func RestoreKV(configPath string, dataPath string, encryptionKey []byte) (*KV, error) {
+	k := KV{
+		configPath:    configPath,
+		dataPath:      dataPath,
+		encryptionKey: encryptionKey,
 	}
 
 	return &k, nil
@@ -397,7 +407,7 @@ func (k *KV) GetVersion(_ context.Context, secretPath string, version int) (kv.K
 
 func (k *KV) readConfig() (kv.KVConfig, error) {
 	pathEncoded := base64.StdEncoding.EncodeToString([]byte("config"))
-	p := filepath.Join(k.dataPath, pathEncoded)
+	p := filepath.Join(k.configPath, pathEncoded)
 
 	b, err := os.ReadFile(p)
 	if err != nil {
@@ -415,7 +425,7 @@ func (k *KV) readConfig() (kv.KVConfig, error) {
 
 func (k *KV) deleteConfig(secretPath string) error {
 	pathEncoded := base64.StdEncoding.EncodeToString([]byte(secretPath))
-	p := filepath.Join(k.dataPath, pathEncoded)
+	p := filepath.Join(k.configPath, pathEncoded)
 
 	return os.Remove(p)
 }

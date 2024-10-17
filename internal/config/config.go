@@ -32,7 +32,7 @@ func Default() (Config, error) {
 		LoggerLevel: "DEBUG",
 		Server:      Server{Addr: ":8080"},
 		Postgres:    Postgres{Addr: "postgres://postgres:password@localhost:5432/vault"},
-		Storage:     Storage{MountPath: "/data"},
+		Storage:     Storage{MountPath: "./data"},
 	}, nil
 }
 

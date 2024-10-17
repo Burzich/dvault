@@ -1,6 +1,7 @@
 package dvault
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
@@ -9,6 +10,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -22,8 +24,8 @@ import (
 )
 
 type DVault struct {
-	EncryptionKey string
-	Logger        *slog.Logger
+	encryptionKey []byte
+	logger        *slog.Logger
 	mountPath     string
 
 	buildDate     time.Time
@@ -32,16 +34,15 @@ type DVault struct {
 
 	mu sync.RWMutex
 
-	kv         map[string]kv2.KV
-	shareKeys  []string
-	N          int
-	T          int
-	commitment secretsharing.SecretCommitment
+	kv        map[string]kv2.KV
+	shareKeys []string
+	N         int
+	T         int
 }
 
-func NewDVault(logger *slog.Logger, mountPath string) *DVault {
+func NewDVault(logger *slog.Logger, mountPath string) (*DVault, error) {
 	d := DVault{
-		Logger:        logger,
+		logger:        logger,
 		mountPath:     mountPath,
 		buildDate:     time.Now(),
 		isSealed:      atomic.Bool{},
@@ -51,19 +52,22 @@ func NewDVault(logger *slog.Logger, mountPath string) *DVault {
 		shareKeys:     nil,
 		N:             0,
 		T:             0,
-		commitment:    nil,
 	}
 
 	d.isSealed.Store(true)
+	err := d.tryInitVault()
+	if err != nil {
+		return nil, err
+	}
 
-	return &d
+	return &d, nil
 }
 
 func (d *DVault) Unseal(ctx context.Context, unseal Unseal) (UnsealResponse, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if d.isInitialized.Load() {
+	if !d.isSealed.Load() {
 		return UnsealResponse{}, errors.New("already unsealed")
 	}
 
@@ -74,12 +78,19 @@ func (d *DVault) Unseal(ctx context.Context, unseal Unseal) (UnsealResponse, err
 	d.shareKeys = append(d.shareKeys, unseal.Key)
 
 	if len(d.shareKeys) == d.T {
-		err := d.tryUnseal(d.shareKeys)
+		key, err := d.tryUnseal(d.shareKeys)
+		d.shareKeys = nil
+		if err != nil {
+			return UnsealResponse{}, err
+		}
+
+		err = d.restoreKV(key)
 		if err != nil {
 			return UnsealResponse{}, err
 		}
 
 		d.isSealed.Store(false)
+		d.encryptionKey = key
 
 		return UnsealResponse{
 			BuildDate:         d.buildDate.String(),
@@ -134,6 +145,10 @@ func (d *DVault) Init(_ context.Context, init Init) (InitResponse, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
+	if d.isInitialized.Load() {
+		return InitResponse{}, errors.New("already initialized")
+	}
+
 	g := group.P256
 	t := uint(2)
 	n := uint(5)
@@ -146,10 +161,8 @@ func (d *DVault) Init(_ context.Context, init Init) (InitResponse, error) {
 	}
 
 	secret := g.RandomScalar(rand.Reader)
-	ss := secretsharing.New(rand.Reader, t, secret)
+	ss := secretsharing.New(rand.Reader, t-1, secret)
 	shares := ss.Share(n)
-
-	com := ss.CommitSecret()
 
 	var sharesValuesBase64 []string
 
@@ -177,7 +190,10 @@ func (d *DVault) Init(_ context.Context, init Init) (InitResponse, error) {
 	if err != nil {
 		return InitResponse{}, err
 	}
-	d.commitment = com
+
+	d.N = int(n)
+	d.T = int(t)
+	d.isInitialized.Store(true)
 
 	return InitResponse{
 		Keys:       sharesValuesBase64,
@@ -514,7 +530,7 @@ func (d *DVault) CreateMount(_ context.Context, path string, mount CreateMount) 
 			return response, err
 		}
 
-		kv, err := disc.NewKV(filepath.Join(d.mountPath, path), filepath.Join(d.mountPath, "data", path), cfg, d.EncryptionKey)
+		kv, err := disc.NewKV(filepath.Join(d.mountPath, path), filepath.Join(d.mountPath, "data", path), cfg, d.encryptionKey)
 		if err != nil {
 			return response, err
 		}
@@ -529,9 +545,6 @@ func (d *DVault) CreateMount(_ context.Context, path string, mount CreateMount) 
 }
 
 func (d *DVault) generateAndSaveEncryptKey(secret []byte, shares uint, threshold uint) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-
 	encryptKey := make([]byte, 256)
 	_, err := rand.Read(encryptKey)
 	if err != nil {
@@ -545,8 +558,8 @@ func (d *DVault) generateAndSaveEncryptKey(secret []byte, shares uint, threshold
 
 	encryptedEncryptedKeyBase64 := base64.StdEncoding.EncodeToString(encryptedEncryptedKey)
 	keyPath := filepath.Join(d.mountPath, "key")
-	err = os.WriteFile(keyPath, []byte(encryptedEncryptedKeyBase64), 0600)
 
+	err = os.WriteFile(keyPath, []byte(fmt.Sprintf("%s#%d#%d", encryptedEncryptedKeyBase64, shares, threshold)), 0600)
 	if err != nil {
 		return err
 	}
@@ -554,13 +567,13 @@ func (d *DVault) generateAndSaveEncryptKey(secret []byte, shares uint, threshold
 	return nil
 }
 
-func (d *DVault) tryUnseal(keysBase64Encoded []string) error {
+func (d *DVault) tryUnseal(keysBase64Encoded []string) ([]byte, error) {
 	valueKeys := make([][]byte, len(keysBase64Encoded))
 	idKeys := make([][]byte, len(keysBase64Encoded))
 	for i := range valueKeys {
 		valueBase64, idBase64, ok := strings.Cut(keysBase64Encoded[i], "#")
 		if !ok {
-			return errors.New("invalid share")
+			return nil, errors.New("invalid share")
 		}
 
 		{
@@ -568,7 +581,7 @@ func (d *DVault) tryUnseal(keysBase64Encoded []string) error {
 
 			n, err := base64.StdEncoding.Decode(base64Text, []byte(valueBase64))
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			valueKeys[i] = base64Text[:n]
@@ -578,7 +591,7 @@ func (d *DVault) tryUnseal(keysBase64Encoded []string) error {
 
 			n, err := base64.StdEncoding.Decode(base64Text, []byte(idBase64))
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			idKeys[i] = base64Text[:n]
@@ -591,7 +604,7 @@ func (d *DVault) tryUnseal(keysBase64Encoded []string) error {
 		scalar := g.NewScalar()
 		err := scalar.UnmarshalBinary(valueKeys[i])
 		if err != nil {
-			return err
+			return nil, err
 		}
 		values = append(values, scalar)
 	}
@@ -602,9 +615,9 @@ func (d *DVault) tryUnseal(keysBase64Encoded []string) error {
 		scalar := g.NewScalar()
 		err := scalar.UnmarshalBinary(idKeys[i])
 		if err != nil {
-			return err
+			return nil, err
 		}
-		ids = append(values, scalar)
+		ids = append(ids, scalar)
 	}
 
 	var shares []secretsharing.Share
@@ -615,11 +628,100 @@ func (d *DVault) tryUnseal(keysBase64Encoded []string) error {
 		})
 	}
 
-	for i := range shares {
-		ok := secretsharing.Verify(uint(d.T), shares[i], d.commitment)
-		if !ok {
-			return errors.New("invalid share")
+	secret, err := secretsharing.Recover(uint(d.T)-1, shares)
+	if err != nil {
+		return nil, err
+	}
+
+	rootKey, err := secret.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := d.restoreKey(rootKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return key, nil
+}
+
+func (d *DVault) tryInitVault() error {
+	keyPath := filepath.Join(d.mountPath, "key")
+	encryptionKeyBytes, err := os.ReadFile(keyPath)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return nil
+	}
+
+	parts := strings.Split(string(encryptionKeyBytes), "#")
+	if len(parts) != 3 {
+		return errors.New("encryption key corrupted, try deleting key file and try again")
+	}
+
+	n, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return errors.New("encryption key corrupted, try deleting key file and try again")
+	}
+
+	t, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return errors.New("encryption key corrupted, try deleting key file and try again")
+	}
+
+	d.N = n
+	d.T = t
+	d.isInitialized.Store(true)
+
+	return nil
+}
+
+func (d *DVault) restoreKey(rootKey []byte) ([]byte, error) {
+	keyPath := filepath.Join(d.mountPath, "key")
+	encryptionKeyBytes, err := os.ReadFile(keyPath)
+	if err != nil {
+		return nil, err
+	}
+
+	base64Secret, _, ok := bytes.Cut(encryptionKeyBytes, []byte("#"))
+	if !ok {
+		return nil, err
+	}
+
+	secret := make([]byte, base64.StdEncoding.DecodedLen(len(base64Secret)))
+	n, err := base64.StdEncoding.Decode(secret, base64Secret)
+	if err != nil {
+		return nil, err
+	}
+
+	encryptionKey, err := tools.Decrypt(secret[:n], rootKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return encryptionKey, nil
+}
+
+func (d *DVault) restoreKV(encryptionKey []byte) error {
+	dataPath := filepath.Join(d.mountPath, "data")
+	dirEntries, err := os.ReadDir(dataPath)
+	if err != nil {
+		return err
+	}
+
+	for _, dirEntry := range dirEntries {
+		if !dirEntry.IsDir() {
+			continue
 		}
+
+		kv, err := disc.RestoreKV(filepath.Join(d.mountPath, dirEntry.Name()), filepath.Join(dataPath, dirEntry.Name()), encryptionKey)
+		if err != nil {
+			return err
+		}
+
+		d.kv[dirEntry.Name()] = kv
 	}
 
 	return nil
