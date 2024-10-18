@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	kv2 "github.com/Burzich/dvault/internal/dvault/kv"
@@ -29,8 +28,8 @@ type DVault struct {
 	mountPath     string
 
 	buildDate     time.Time
-	isSealed      atomic.Bool
-	isInitialized atomic.Bool
+	isSealed      bool
+	isInitialized bool
 
 	mu sync.RWMutex
 
@@ -45,8 +44,8 @@ func NewDVault(logger *slog.Logger, mountPath string) (*DVault, error) {
 		logger:        logger,
 		mountPath:     mountPath,
 		buildDate:     time.Now(),
-		isSealed:      atomic.Bool{},
-		isInitialized: atomic.Bool{},
+		isSealed:      true,
+		isInitialized: false,
 		mu:            sync.RWMutex{},
 		kv:            make(map[string]kv2.KV),
 		shareKeys:     nil,
@@ -54,7 +53,6 @@ func NewDVault(logger *slog.Logger, mountPath string) (*DVault, error) {
 		T:             0,
 	}
 
-	d.isSealed.Store(true)
 	err := d.tryInitVault()
 	if err != nil {
 		return nil, err
@@ -67,7 +65,7 @@ func (d *DVault) Unseal(ctx context.Context, unseal Unseal) (UnsealResponse, err
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if !d.isSealed.Load() {
+	if !d.isSealed {
 		return UnsealResponse{}, errors.New("already unsealed")
 	}
 
@@ -89,7 +87,7 @@ func (d *DVault) Unseal(ctx context.Context, unseal Unseal) (UnsealResponse, err
 			return UnsealResponse{}, err
 		}
 
-		d.isSealed.Store(false)
+		d.isSealed = false
 		d.encryptionKey = key
 
 		return UnsealResponse{
@@ -98,14 +96,14 @@ func (d *DVault) Unseal(ctx context.Context, unseal Unseal) (UnsealResponse, err
 			ClusterName:       "dvault",
 			HcpLinkResourceID: "",
 			HcpLinkStatus:     "",
-			Initialized:       d.isInitialized.Load(),
+			Initialized:       d.isInitialized,
 			Migration:         false,
 			N:                 d.N,
 			T:                 d.T,
 			Progress:          0,
 			Nonce:             "",
 			RecoverySeal:      false,
-			Sealed:            d.isSealed.Load(),
+			Sealed:            d.isSealed,
 			StorageType:       "file",
 			Type:              "shamir",
 			Version:           "1.0.0",
@@ -118,14 +116,14 @@ func (d *DVault) Unseal(ctx context.Context, unseal Unseal) (UnsealResponse, err
 		ClusterName:       "dvault",
 		HcpLinkResourceID: "",
 		HcpLinkStatus:     "",
-		Initialized:       d.isInitialized.Load(),
+		Initialized:       d.isInitialized,
 		Migration:         false,
 		N:                 d.N,
 		T:                 d.T,
 		Progress:          len(d.shareKeys),
 		Nonce:             "",
 		RecoverySeal:      false,
-		Sealed:            d.isSealed.Load(),
+		Sealed:            d.isSealed,
 		StorageType:       "file",
 		Type:              "shamir",
 		Version:           "1.0.0",
@@ -133,10 +131,13 @@ func (d *DVault) Unseal(ctx context.Context, unseal Unseal) (UnsealResponse, err
 }
 
 func (d *DVault) Seal(ctx context.Context) (Response, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	var response Response
 	response.RequestId = tools.GenerateXRequestID()
 
-	d.isSealed.Store(true)
+	d.isSealed = true
 
 	return response, nil
 }
@@ -145,7 +146,7 @@ func (d *DVault) Init(_ context.Context, init Init) (InitResponse, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if d.isInitialized.Load() {
+	if d.isInitialized {
 		return InitResponse{}, errors.New("already initialized")
 	}
 
@@ -193,7 +194,7 @@ func (d *DVault) Init(_ context.Context, init Init) (InitResponse, error) {
 
 	d.N = int(n)
 	d.T = int(t)
-	d.isInitialized.Store(true)
+	d.isInitialized = true
 
 	return InitResponse{
 		Keys:       sharesValuesBase64,
@@ -203,11 +204,13 @@ func (d *DVault) Init(_ context.Context, init Init) (InitResponse, error) {
 }
 
 func (d *DVault) SealStatus(ctx context.Context) (SealStatus, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 
 	return SealStatus{
 		Type:         "shamir",
-		Initialized:  d.isInitialized.Load(),
-		Sealed:       d.isSealed.Load(),
+		Initialized:  d.isInitialized,
+		Sealed:       d.isSealed,
 		T:            d.T,
 		N:            d.N,
 		Progress:     len(d.shareKeys),
@@ -223,8 +226,8 @@ func (d *DVault) SealStatus(ctx context.Context) (SealStatus, error) {
 }
 
 func (d *DVault) GetKVSecret(ctx context.Context, mount string, secretPath string) (Response, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -244,8 +247,8 @@ func (d *DVault) GetKVSecret(ctx context.Context, mount string, secretPath strin
 }
 
 func (d *DVault) GetKVSecretByVersion(ctx context.Context, mount string, secretPath string, version int) (Response, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -265,8 +268,8 @@ func (d *DVault) GetKVSecretByVersion(ctx context.Context, mount string, secretP
 }
 
 func (d *DVault) SaveKVSecret(ctx context.Context, mount string, secretPath string, data map[string]interface{}, cas int) (Response, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -286,8 +289,8 @@ func (d *DVault) SaveKVSecret(ctx context.Context, mount string, secretPath stri
 }
 
 func (d *DVault) UpdateKVSecret(ctx context.Context, mount string, secretPath string, data map[string]interface{}) (Response, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -307,8 +310,8 @@ func (d *DVault) UpdateKVSecret(ctx context.Context, mount string, secretPath st
 }
 
 func (d *DVault) DeleteKVSecret(ctx context.Context, mount string, secretPath string) (Response, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -327,8 +330,8 @@ func (d *DVault) DeleteKVSecret(ctx context.Context, mount string, secretPath st
 }
 
 func (d *DVault) UndeleteKVSecret(ctx context.Context, mount string, secretPath string) (Response, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -347,8 +350,8 @@ func (d *DVault) UndeleteKVSecret(ctx context.Context, mount string, secretPath 
 }
 
 func (d *DVault) DeleteKVSecretByVersion(ctx context.Context, mount string, secretPath string, version []int) (Response, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -367,8 +370,8 @@ func (d *DVault) DeleteKVSecretByVersion(ctx context.Context, mount string, secr
 }
 
 func (d *DVault) UndeleteKVSecretByVersion(ctx context.Context, mount string, secretPath string, version int) (Response, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -387,8 +390,8 @@ func (d *DVault) UndeleteKVSecretByVersion(ctx context.Context, mount string, se
 }
 
 func (d *DVault) DestroyKVSecret(ctx context.Context, mount string, secretPath string, version []int) (Response, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -407,8 +410,8 @@ func (d *DVault) DestroyKVSecret(ctx context.Context, mount string, secretPath s
 }
 
 func (d *DVault) UpdateKVConfig(ctx context.Context, mount string, config kv2.KVConfig) (Response, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -427,8 +430,8 @@ func (d *DVault) UpdateKVConfig(ctx context.Context, mount string, config kv2.KV
 }
 
 func (d *DVault) GetKVConfig(ctx context.Context, mount string) (Response, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -448,8 +451,8 @@ func (d *DVault) GetKVConfig(ctx context.Context, mount string) (Response, error
 }
 
 func (d *DVault) GetKVMeta(ctx context.Context, mount string, secretPath string) (Response, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -469,8 +472,8 @@ func (d *DVault) GetKVMeta(ctx context.Context, mount string, secretPath string)
 }
 
 func (d *DVault) UpdateKVMeta(ctx context.Context, mount string, secretPath string, meta kv2.KVMeta) (Response, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -489,8 +492,8 @@ func (d *DVault) UpdateKVMeta(ctx context.Context, mount string, secretPath stri
 }
 
 func (d *DVault) DeleteKVMeta(ctx context.Context, mount string, secretPath string) (Response, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -674,7 +677,7 @@ func (d *DVault) tryInitVault() error {
 
 	d.N = n
 	d.T = t
-	d.isInitialized.Store(true)
+	d.isInitialized = true
 
 	return nil
 }
