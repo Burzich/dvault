@@ -23,15 +23,16 @@ import (
 )
 
 type DVault struct {
-	encryptionKey []byte
-	logger        *slog.Logger
-	mountPath     string
+	logger    *slog.Logger
+	mountPath string
 
 	buildDate     time.Time
 	isSealed      bool
 	isInitialized bool
 
 	mu sync.RWMutex
+
+	encryptor tools.Encryptor
 
 	kv        map[string]kv2.KV
 	shareKeys []string
@@ -76,19 +77,19 @@ func (d *DVault) Unseal(ctx context.Context, unseal Unseal) (UnsealResponse, err
 	d.shareKeys = append(d.shareKeys, unseal.Key)
 
 	if len(d.shareKeys) == d.T {
-		key, err := d.tryUnseal(d.shareKeys)
+		encryptor, err := d.tryUnseal(d.shareKeys)
 		d.shareKeys = nil
 		if err != nil {
 			return UnsealResponse{}, err
 		}
 
-		err = d.restoreKV(key)
+		err = d.restoreKV(encryptor)
 		if err != nil {
 			return UnsealResponse{}, err
 		}
 
 		d.isSealed = false
-		d.encryptionKey = key
+		d.encryptor = encryptor
 
 		return UnsealResponse{
 			BuildDate:         d.buildDate.String(),
@@ -187,11 +188,12 @@ func (d *DVault) Init(_ context.Context, init Init) (InitResponse, error) {
 		return InitResponse{}, err
 	}
 
-	err = d.generateAndSaveEncryptKey(secretBytes, n, t)
+	encryptor, err := d.generateAndSaveEncryptKey(secretBytes, n, t)
 	if err != nil {
 		return InitResponse{}, err
 	}
 
+	d.encryptor = encryptor
 	d.N = int(n)
 	d.T = int(t)
 	d.isInitialized = true
@@ -534,7 +536,7 @@ func (d *DVault) CreateMount(_ context.Context, path string, mount CreateMount) 
 			return response, err
 		}
 
-		kv, err := disc.NewKV(filepath.Join(d.mountPath, path), filepath.Join(d.mountPath, "data", path), cfg, d.encryptionKey)
+		kv, err := disc.NewKV(filepath.Join(d.mountPath, path), filepath.Join(d.mountPath, "data", path), cfg, d.encryptor)
 		if err != nil {
 			return response, err
 		}
@@ -548,16 +550,21 @@ func (d *DVault) CreateMount(_ context.Context, path string, mount CreateMount) 
 	return response, nil
 }
 
-func (d *DVault) generateAndSaveEncryptKey(secret []byte, shares uint, threshold uint) error {
+func (d *DVault) generateAndSaveEncryptKey(secret []byte, shares uint, threshold uint) (tools.Encryptor, error) {
 	encryptKey := make([]byte, 256)
 	_, err := rand.Read(encryptKey)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	encryptedEncryptedKey, err := tools.Encrypt(encryptKey, secret)
+	encryptor, err := tools.NewAESEncryptor(secret)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	encryptedEncryptedKey, err := encryptor.Encrypt(encryptKey)
+	if err != nil {
+		return nil, err
 	}
 
 	encryptedEncryptedKeyBase64 := base64.StdEncoding.EncodeToString(encryptedEncryptedKey)
@@ -565,13 +572,13 @@ func (d *DVault) generateAndSaveEncryptKey(secret []byte, shares uint, threshold
 
 	err = os.WriteFile(keyPath, []byte(fmt.Sprintf("%s#%d#%d", encryptedEncryptedKeyBase64, shares, threshold)), 0600)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return encryptor, nil
 }
 
-func (d *DVault) tryUnseal(keysBase64Encoded []string) ([]byte, error) {
+func (d *DVault) tryUnseal(keysBase64Encoded []string) (tools.Encryptor, error) {
 	valueKeys := make([][]byte, len(keysBase64Encoded))
 	idKeys := make([][]byte, len(keysBase64Encoded))
 	for i := range valueKeys {
@@ -642,12 +649,12 @@ func (d *DVault) tryUnseal(keysBase64Encoded []string) ([]byte, error) {
 		return nil, err
 	}
 
-	key, err := d.restoreKey(rootKey)
+	encryptor, err := d.restoreKey(rootKey)
 	if err != nil {
 		return nil, err
 	}
 
-	return key, nil
+	return encryptor, nil
 }
 
 func (d *DVault) tryInitVault() error {
@@ -682,7 +689,7 @@ func (d *DVault) tryInitVault() error {
 	return nil
 }
 
-func (d *DVault) restoreKey(rootKey []byte) ([]byte, error) {
+func (d *DVault) restoreKey(rootKey []byte) (tools.Encryptor, error) {
 	keyPath := filepath.Join(d.mountPath, "key")
 	encryptionKeyBytes, err := os.ReadFile(keyPath)
 	if err != nil {
@@ -700,15 +707,20 @@ func (d *DVault) restoreKey(rootKey []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	encryptionKey, err := tools.Decrypt(secret[:n], rootKey)
+	encryptor, err := tools.NewAESEncryptor(rootKey)
 	if err != nil {
 		return nil, err
 	}
 
-	return encryptionKey, nil
+	encryptionKey, err := encryptor.Decrypt(secret[:n])
+	if err != nil {
+		return nil, err
+	}
+
+	return tools.NewAESEncryptor(encryptionKey)
 }
 
-func (d *DVault) restoreKV(encryptionKey []byte) error {
+func (d *DVault) restoreKV(encryptor tools.Encryptor) error {
 	dataPath := filepath.Join(d.mountPath, "data")
 	dirEntries, err := os.ReadDir(dataPath)
 	if err != nil {
@@ -720,7 +732,7 @@ func (d *DVault) restoreKV(encryptionKey []byte) error {
 			continue
 		}
 
-		kv, err := disc.RestoreKV(filepath.Join(d.mountPath, dirEntry.Name()), filepath.Join(dataPath, dirEntry.Name()), encryptionKey)
+		kv, err := disc.RestoreKV(filepath.Join(d.mountPath, dirEntry.Name()), filepath.Join(dataPath, dirEntry.Name()), encryptor)
 		if err != nil {
 			return err
 		}

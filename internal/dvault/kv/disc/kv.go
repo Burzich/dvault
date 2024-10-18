@@ -13,20 +13,21 @@ import (
 	"time"
 
 	"github.com/Burzich/dvault/internal/dvault/kv"
+	"github.com/Burzich/dvault/internal/dvault/tools"
 )
 
 type KV struct {
-	configPath    string
-	dataPath      string
-	encryptionKey []byte
-	m             sync.Mutex
+	configPath string
+	dataPath   string
+	encryptor  tools.Encryptor
+	m          sync.Mutex
 }
 
-func NewKV(configPath string, dataPath string, config kv.KVConfig, encryptionKey []byte) (*KV, error) {
+func NewKV(configPath string, dataPath string, config kv.KVConfig, encryptor tools.Encryptor) (*KV, error) {
 	k := KV{
-		configPath:    configPath,
-		dataPath:      dataPath,
-		encryptionKey: encryptionKey,
+		configPath: configPath,
+		dataPath:   dataPath,
+		encryptor:  encryptor,
 	}
 
 	err := os.MkdirAll(k.dataPath, os.ModePerm)
@@ -46,11 +47,11 @@ func NewKV(configPath string, dataPath string, config kv.KVConfig, encryptionKey
 	return &k, nil
 }
 
-func RestoreKV(configPath string, dataPath string, encryptionKey []byte) (*KV, error) {
+func RestoreKV(configPath string, dataPath string, encryptor tools.Encryptor) (*KV, error) {
 	k := KV{
-		configPath:    configPath,
-		dataPath:      dataPath,
-		encryptionKey: encryptionKey,
+		configPath: configPath,
+		dataPath:   dataPath,
+		encryptor:  encryptor,
 	}
 
 	return &k, nil
