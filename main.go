@@ -23,27 +23,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	/*	pgxCfg, err := pgx.ParseConnectionString(cfg.Postgres.Addr)
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-
-		connPool, err := pgx.NewConnPool(pgx.ConnPoolConfig{ConnConfig: pgxCfg})
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-		defer connPool.Close()
-
-		_, err = connPool.Exec("SELECT 1")
-		if err != nil {
-			log.Fatal(err)
-		}*/
-
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 
-	vault, err := dvault.NewDVault(logger, cfg.MountPath)
+	vault, err := dvault.NewDVault(logger, cfg.Dvault)
 	if err != nil {
 		logger.Error(err.Error())
 		return

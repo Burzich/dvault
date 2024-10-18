@@ -15,16 +15,18 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Burzich/dvault/internal/config"
 	kv2 "github.com/Burzich/dvault/internal/dvault/kv"
 	"github.com/Burzich/dvault/internal/dvault/kv/disc"
-	"github.com/Burzich/dvault/internal/dvault/tools"
+	"github.com/Burzich/dvault/internal/tools"
 	"github.com/cloudflare/circl/group"
 	"github.com/cloudflare/circl/secretsharing"
 )
 
 type DVault struct {
-	logger    *slog.Logger
-	mountPath string
+	logger           *slog.Logger
+	mountPath        string
+	encryptionMethod string
 
 	buildDate     time.Time
 	isSealed      bool
@@ -40,18 +42,19 @@ type DVault struct {
 	T         int
 }
 
-func NewDVault(logger *slog.Logger, mountPath string) (*DVault, error) {
+func NewDVault(logger *slog.Logger, dvault config.Dvault) (*DVault, error) {
 	d := DVault{
-		logger:        logger,
-		mountPath:     mountPath,
-		buildDate:     time.Now(),
-		isSealed:      true,
-		isInitialized: false,
-		mu:            sync.RWMutex{},
-		kv:            make(map[string]kv2.KV),
-		shareKeys:     nil,
-		N:             0,
-		T:             0,
+		logger:           logger,
+		mountPath:        dvault.MountPath,
+		encryptionMethod: dvault.EncryptionMethod,
+		buildDate:        time.Now(),
+		isSealed:         true,
+		isInitialized:    false,
+		mu:               sync.RWMutex{},
+		kv:               make(map[string]kv2.KV),
+		shareKeys:        nil,
+		N:                0,
+		T:                0,
 	}
 
 	err := d.tryInitVault()
@@ -559,7 +562,7 @@ func (d *DVault) generateAndSaveEncryptKey(secret []byte, shares uint, threshold
 		return nil, err
 	}
 
-	encryptor, err := tools.NewAESEncryptor(secret)
+	encryptor, err := tools.NewEncryptor(d.encryptionMethod, secret)
 	if err != nil {
 		return nil, err
 	}
@@ -709,7 +712,7 @@ func (d *DVault) restoreKey(rootKey []byte) (tools.Encryptor, error) {
 		return nil, err
 	}
 
-	encryptor, err := tools.NewAESEncryptor(rootKey)
+	encryptor, err := tools.NewEncryptor(d.encryptionMethod, rootKey)
 	if err != nil {
 		return nil, err
 	}
@@ -719,7 +722,7 @@ func (d *DVault) restoreKey(rootKey []byte) (tools.Encryptor, error) {
 		return nil, err
 	}
 
-	return tools.NewAESEncryptor(encryptionKey)
+	return tools.NewEncryptor(d.encryptionMethod, encryptionKey)
 }
 
 func (d *DVault) restoreKV(encryptor tools.Encryptor) error {

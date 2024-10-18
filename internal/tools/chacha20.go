@@ -12,7 +12,7 @@ type ChaCha struct {
 	aead cipher.AEAD
 }
 
-func NewChaCha(secret []byte) (ChaCha, error) {
+func NewChaChaEncryptor(secret []byte) (ChaCha, error) {
 	aead, err := chacha20poly1305.New(secret)
 	if err != nil {
 		return ChaCha{}, err

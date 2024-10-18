@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/Burzich/dvault/internal/dvault/kv"
-	"github.com/Burzich/dvault/internal/dvault/tools"
+	"github.com/Burzich/dvault/internal/tools"
 )
 
 type KV struct {
