@@ -34,6 +34,7 @@ func NewKV(configPath string, dataPath string, config kv.KVConfig, encryptor too
 	if err != nil {
 		return nil, err
 	}
+
 	err = os.MkdirAll(k.configPath, os.ModePerm)
 	if err != nil {
 		return nil, err
@@ -95,7 +96,7 @@ func (k *KV) Save(_ context.Context, secretPath string, data map[string]interfac
 		return k.writeData(secretPath, data)
 	}
 
-	if oldData.Meta.CurrentVersion != cas && oldData.Meta.CasRequired == true {
+	if oldData.Meta.CurrentVersion != cas && oldData.Meta.CasRequired {
 		return errors.New("cas version does not match")
 	}
 
@@ -181,7 +182,7 @@ func (k *KV) Update(_ context.Context, secretPath string, data map[string]interf
 	oldData.Meta.UpdatedTime = time.Now()
 	for i := len(oldData.Records); i != 0; i-- {
 		record := oldData.Records[i-1]
-		if record.Metadata.Destroyed == false && record.Metadata.DeletionTime == "" {
+		if !record.Metadata.Destroyed && record.Metadata.DeletionTime == "" {
 			oldData.Records[i-1] = newRecord
 
 			return k.writeData(secretPath, oldData)
@@ -209,7 +210,7 @@ func (k *KV) Destroy(_ context.Context, secretPath string, versions []int) error
 
 	for i := len(data.Records); i != 0; i-- {
 		record := data.Records[i-1]
-		if record.Metadata.Destroyed == false && slices.Contains(versions, record.Metadata.Version) {
+		if !record.Metadata.Destroyed && slices.Contains(versions, record.Metadata.Version) {
 			record.Metadata.Destroyed = true
 			record.Data = nil
 			data.Records[i-1] = record
@@ -287,7 +288,7 @@ func (k *KV) UndeleteVersion(_ context.Context, secretPath string, version int) 
 
 	for i := len(data.Records); i != 0; i-- {
 		record := data.Records[i-1]
-		if record.Metadata.Destroyed == false && record.Metadata.DeletionTime != "" && record.Metadata.Version == version {
+		if !record.Metadata.Destroyed && record.Metadata.DeletionTime != "" && record.Metadata.Version == version {
 			record.Metadata.DeletionTime = ""
 			data.Records[i-1] = record
 
@@ -309,7 +310,7 @@ func (k *KV) DeleteVersion(ctx context.Context, secretPath string, versions []in
 
 	for i := len(data.Records); i != 0; i-- {
 		record := data.Records[i-1]
-		if record.Metadata.Destroyed == false && record.Metadata.DeletionTime == "" && slices.Contains(versions, record.Metadata.Version) {
+		if !record.Metadata.Destroyed && record.Metadata.DeletionTime == "" && slices.Contains(versions, record.Metadata.Version) {
 			record.Metadata.DeletionTime = time.Now().String()
 			data.Records[i-1] = record
 
@@ -331,7 +332,7 @@ func (k *KV) Undelete(_ context.Context, secretPath string) error {
 
 	for i := len(data.Records); i != 0; i-- {
 		record := data.Records[i-1]
-		if record.Metadata.Destroyed == false && record.Metadata.DeletionTime != "" {
+		if !record.Metadata.Destroyed && record.Metadata.DeletionTime != "" {
 			record.Metadata.DeletionTime = ""
 			data.Records[i-1] = record
 
@@ -353,7 +354,7 @@ func (k *KV) Delete(_ context.Context, secretPath string) error {
 
 	for i := len(data.Records); i != 0; i-- {
 		record := data.Records[i-1]
-		if record.Metadata.Destroyed == false && record.Metadata.DeletionTime == "" {
+		if !record.Metadata.Destroyed && record.Metadata.DeletionTime == "" {
 			record.Metadata.DeletionTime = time.Now().String()
 			data.Records[i-1] = record
 
@@ -375,7 +376,7 @@ func (k *KV) Get(_ context.Context, secretPath string) (kv.KVRecord, error) {
 
 	for i := len(data.Records); i != 0; i-- {
 		record := data.Records[i-1]
-		if record.Metadata.Destroyed == false && record.Metadata.DeletionTime == "" {
+		if !record.Metadata.Destroyed && record.Metadata.DeletionTime == "" {
 			record.Metadata.CustomMetadata = data.Meta.CustomMetadata
 			return record, nil
 		}
@@ -394,7 +395,7 @@ func (k *KV) GetVersion(_ context.Context, secretPath string, version int) (kv.K
 	}
 
 	index := slices.IndexFunc(data.Records, func(record kv.KVRecord) bool {
-		return record.Metadata.Version == version && record.Metadata.DeletionTime == "" && record.Metadata.Destroyed == false
+		return record.Metadata.Version == version && record.Metadata.DeletionTime == "" && !record.Metadata.Destroyed
 	})
 
 	if index == -1 {
@@ -404,6 +405,23 @@ func (k *KV) GetVersion(_ context.Context, secretPath string, version int) (kv.K
 	record := data.Records[index]
 	record.Metadata.CustomMetadata = data.Meta.CustomMetadata
 	return record, nil
+}
+
+func (k *KV) DestroyKV(_ context.Context) error {
+	k.m.Lock()
+	defer k.m.Unlock()
+
+	err := k.deleteConfig()
+	if err != nil {
+		return err
+	}
+
+	err = k.deleteAllData()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (k *KV) readConfig() (kv.KVConfig, error) {
@@ -424,8 +442,8 @@ func (k *KV) readConfig() (kv.KVConfig, error) {
 	return data, nil
 }
 
-func (k *KV) deleteConfig(secretPath string) error {
-	pathEncoded := base64.StdEncoding.EncodeToString([]byte(secretPath))
+func (k *KV) deleteConfig() error {
+	pathEncoded := base64.StdEncoding.EncodeToString([]byte("config"))
 	p := filepath.Join(k.configPath, pathEncoded)
 
 	return os.Remove(p)
@@ -476,6 +494,10 @@ func (k *KV) deleteData(secretPath string) error {
 	p := filepath.Join(k.dataPath, pathEncoded)
 
 	return os.Remove(p)
+}
+
+func (k *KV) deleteAllData() error {
+	return os.Remove(k.dataPath)
 }
 
 func (k *KV) writeData(secretPath string, data Data) error {

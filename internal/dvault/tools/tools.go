@@ -27,10 +27,6 @@ func GenerateXRequestID() string {
 	return uuid.NewString()
 }
 
-func NewEncryptor(secret []byte) (Encryptor, error) {
-	return nil, nil
-}
-
 type Encryptor interface {
 	Encrypt(plaintext []byte) ([]byte, error)
 	Decrypt(data []byte) ([]byte, error)
