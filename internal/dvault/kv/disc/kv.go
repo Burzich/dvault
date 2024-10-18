@@ -457,8 +457,13 @@ func (k *KV) readData(secretPath string) (Data, error) {
 		return Data{}, err
 	}
 
+	decryptedData, err := k.encryptor.Decrypt(b)
+	if err != nil {
+		return Data{}, err
+	}
+
 	var data Data
-	err = json.Unmarshal(b, &data)
+	err = json.Unmarshal(b, &decryptedData)
 	if err != nil {
 		return Data{}, err
 	}
@@ -482,7 +487,12 @@ func (k *KV) writeData(secretPath string, data Data) error {
 		return err
 	}
 
-	err = os.WriteFile(p, d, 0644)
+	encryptedData, err := k.encryptor.Encrypt(d)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(p, encryptedData, 0644)
 	if err != nil {
 		return err
 	}
