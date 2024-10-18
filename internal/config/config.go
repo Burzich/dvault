@@ -35,7 +35,7 @@ func Default() (Config, error) {
 		Postgres:    Postgres{Addr: "postgres://postgres:password@localhost:5432/vault"},
 		Dvault: Dvault{
 			MountPath:        "./data",
-			EncryptionMethod: "aes",
+			EncryptionMethod: "chacha20-poly1305",
 		},
 	}, nil
 }

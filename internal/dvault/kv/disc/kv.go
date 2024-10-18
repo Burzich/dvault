@@ -97,7 +97,7 @@ func (k *KV) Save(_ context.Context, secretPath string, data map[string]interfac
 	}
 
 	if oldData.Meta.CurrentVersion != cas && oldData.Meta.CasRequired {
-		return errors.New("cas version does not match")
+		return kv.ErrCas
 	}
 
 	oldData.Records = append(oldData.Records, kv.KVRecord{
@@ -219,7 +219,7 @@ func (k *KV) Destroy(_ context.Context, secretPath string, versions []int) error
 		}
 	}
 
-	return errors.New("not found")
+	return kv.ErrVersionNotFound
 }
 
 func (k *KV) GetConfig(_ context.Context) (kv.KVConfig, error) {
@@ -299,7 +299,7 @@ func (k *KV) UndeleteVersion(_ context.Context, secretPath string, version int) 
 	return nil
 }
 
-func (k *KV) DeleteVersion(ctx context.Context, secretPath string, versions []int) error {
+func (k *KV) DeleteVersion(_ context.Context, secretPath string, versions []int) error {
 	k.m.Lock()
 	defer k.m.Unlock()
 
@@ -318,7 +318,7 @@ func (k *KV) DeleteVersion(ctx context.Context, secretPath string, versions []in
 		}
 	}
 
-	return errors.New("not found")
+	return kv.ErrVersionNotFound
 }
 
 func (k *KV) Undelete(_ context.Context, secretPath string) error {
@@ -362,7 +362,7 @@ func (k *KV) Delete(_ context.Context, secretPath string) error {
 		}
 	}
 
-	return errors.New("not found")
+	return kv.ErrPathNotFound
 }
 
 func (k *KV) Get(_ context.Context, secretPath string) (kv.KVRecord, error) {
@@ -382,7 +382,7 @@ func (k *KV) Get(_ context.Context, secretPath string) (kv.KVRecord, error) {
 		}
 	}
 
-	return kv.KVRecord{}, errors.New("not found")
+	return kv.KVRecord{}, kv.ErrPathNotFound
 }
 
 func (k *KV) GetVersion(_ context.Context, secretPath string, version int) (kv.KVRecord, error) {
@@ -399,7 +399,7 @@ func (k *KV) GetVersion(_ context.Context, secretPath string, version int) (kv.K
 	})
 
 	if index == -1 {
-		return kv.KVRecord{}, errors.New("version not found")
+		return kv.KVRecord{}, kv.ErrVersionNotFound
 	}
 
 	record := data.Records[index]
@@ -429,6 +429,9 @@ func (k *KV) readConfig() (kv.KVConfig, error) {
 	p := filepath.Join(k.configPath, pathEncoded)
 
 	b, err := os.ReadFile(p)
+	if errors.Is(err, os.ErrNotExist) {
+		return kv.KVConfig{}, kv.ErrPathNotFound
+	}
 	if err != nil {
 		return kv.KVConfig{}, err
 	}
@@ -471,6 +474,9 @@ func (k *KV) readData(secretPath string) (Data, error) {
 	p := filepath.Join(k.dataPath, pathEncoded)
 
 	b, err := os.ReadFile(p)
+	if errors.Is(err, os.ErrNotExist) {
+		return Data{}, kv.ErrPathNotFound
+	}
 	if err != nil {
 		return Data{}, err
 	}
