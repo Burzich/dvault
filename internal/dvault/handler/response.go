@@ -37,3 +37,7 @@ type SealStatusResponse struct {
 	Type              string `json:"type"`
 	Version           string `json:"version"`
 }
+
+type Error struct {
+	Errors []string `json:"errors"`
+}

@@ -16,12 +16,16 @@ type Handler struct {
 	dVault *dvault.DVault
 }
 
+func NewHandler(dVault *dvault.DVault) Handler {
+	return Handler{dVault: dVault}
+}
+
 func (h Handler) GetKVConfig(w http.ResponseWriter, r *http.Request) {
 	mount := chi.URLParam(r, "mount")
 
 	response, err := h.dVault.GetKVConfig(r.Context(), mount)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -48,7 +52,7 @@ func (h Handler) UpdateKVConfig(w http.ResponseWriter, r *http.Request) {
 		MaxVersions:        updateConfig.MaxVersions,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -75,14 +79,14 @@ func (h Handler) GetKVSecret(w http.ResponseWriter, r *http.Request) {
 
 		response, err = h.dVault.GetKVSecretByVersion(r.Context(), mount, secretPath, v)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			h.handleError(w, r, err)
 			return
 		}
 	} else {
 		var err error
 		response, err = h.dVault.GetKVSecret(r.Context(), mount, secretPath)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			h.handleError(w, r, err)
 			return
 		}
 	}
@@ -107,7 +111,7 @@ func (h Handler) CreateKVSecret(w http.ResponseWriter, r *http.Request) {
 
 	response, err := h.dVault.SaveKVSecret(r.Context(), mount, secretPath, createKV.Data, createKV.Options.CAS)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -131,7 +135,7 @@ func (h Handler) UpdateKVSecret(w http.ResponseWriter, r *http.Request) {
 
 	response, err := h.dVault.UpdateKVSecret(r.Context(), mount, secretPath, createKV.Data)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -149,7 +153,7 @@ func (h Handler) DeleteLatestKVSecret(w http.ResponseWriter, r *http.Request) {
 
 	response, err := h.dVault.DeleteKVSecret(r.Context(), mount, secretPath)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -167,13 +171,13 @@ func (h Handler) DeleteKVSecret(w http.ResponseWriter, r *http.Request) {
 
 	var deleteKVSecret DeleteKVSecret
 	if err := json.NewDecoder(r.Body).Decode(&deleteKVSecret); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
 	response, err := h.dVault.DeleteKVSecretByVersion(r.Context(), mount, secretPath, deleteKVSecret.Versions)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -191,13 +195,13 @@ func (h Handler) DestroyKVSecret(w http.ResponseWriter, r *http.Request) {
 
 	var destroyKVSecret DestroyKVSecret
 	if err := json.NewDecoder(r.Body).Decode(&destroyKVSecret); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
 	response, err := h.dVault.DestroyKVSecret(r.Context(), mount, secretPath, destroyKVSecret.Versions)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -215,7 +219,7 @@ func (h Handler) GetKVMetadata(w http.ResponseWriter, r *http.Request) {
 
 	response, err := h.dVault.GetKVMeta(r.Context(), mount, secretPath)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -244,7 +248,7 @@ func (h Handler) UpdateKVMetadata(w http.ResponseWriter, r *http.Request) {
 		MaxVersions:        updateKVMetadata.MaxVersions,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -262,7 +266,7 @@ func (h Handler) DeleteKVMetadata(w http.ResponseWriter, r *http.Request) {
 
 	response, err := h.dVault.DeleteKVMeta(r.Context(), mount, secretPath)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -387,7 +391,7 @@ func (h Handler) Unseal(w http.ResponseWriter, r *http.Request) {
 		Reset:   unsealRequest.Reset,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -402,7 +406,7 @@ func (h Handler) Unseal(w http.ResponseWriter, r *http.Request) {
 func (h Handler) Seal(w http.ResponseWriter, r *http.Request) {
 	response, err := h.dVault.Seal(r.Context())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -417,7 +421,7 @@ func (h Handler) Seal(w http.ResponseWriter, r *http.Request) {
 func (h Handler) SealStatus(w http.ResponseWriter, r *http.Request) {
 	sealStatus, err := h.dVault.SealStatus(r.Context())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -447,7 +451,7 @@ func (h Handler) Init(w http.ResponseWriter, r *http.Request) {
 		StoredShares:      initRequest.StoredShares,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -462,7 +466,7 @@ func (h Handler) Init(w http.ResponseWriter, r *http.Request) {
 func (h Handler) GetMounts(w http.ResponseWriter, r *http.Request) {
 	_, err := h.dVault.SealStatus(r.Context())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -478,7 +482,7 @@ func (h Handler) GetMounts(w http.ResponseWriter, r *http.Request) {
 func (h Handler) GetMount(w http.ResponseWriter, r *http.Request) {
 	_, err := h.dVault.SealStatus(r.Context())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -512,7 +516,7 @@ func (h Handler) CreateMount(w http.ResponseWriter, r *http.Request) {
 		Type:                  createMount.Type,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -527,7 +531,7 @@ func (h Handler) CreateMount(w http.ResponseWriter, r *http.Request) {
 func (h Handler) DeleteMount(w http.ResponseWriter, r *http.Request) {
 	_, err := h.dVault.SealStatus(r.Context())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -545,6 +549,18 @@ func (h Handler) Health(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func NewHandler(dVault *dvault.DVault) Handler {
-	return Handler{dVault: dVault}
+func (h Handler) handleError(rw http.ResponseWriter, r *http.Request, err error) {
+	var b *strconv.NumError
+
+	switch {
+	case errors.As(err, &b):
+		rw.WriteHeader(http.StatusBadRequest)
+	default:
+		rw.WriteHeader(http.StatusInternalServerError)
+	}
+
+	errorResponse := Error{[]string{err.Error()}}
+	if err = json.NewEncoder(rw).Encode(errorResponse); err != nil {
+		return
+	}
 }
