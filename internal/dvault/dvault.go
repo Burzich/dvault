@@ -164,7 +164,10 @@ func (d *DVault) Init(_ context.Context, init Init) (InitResponse, error) {
 
 	secret := g.RandomScalar(rand.Reader)
 	ss := secretsharing.New(rand.Reader, t-1, secret)
-	shares := ss.Share(n)
+	shares := make([]secretsharing.Share, n)
+	for i := range shares {
+		shares[i] = ss.ShareWithID(g.RandomScalar(rand.Reader))
+	}
 
 	var sharesValuesBase64 []string
 
@@ -188,12 +191,11 @@ func (d *DVault) Init(_ context.Context, init Init) (InitResponse, error) {
 		return InitResponse{}, err
 	}
 
-	encryptor, err := d.generateAndSaveEncryptKey(secretBytes, n, t)
+	_, err = d.generateAndSaveEncryptKey(secretBytes, n, t)
 	if err != nil {
 		return InitResponse{}, err
 	}
 
-	d.encryptor = encryptor
 	d.N = int(n)
 	d.T = int(t)
 	d.isInitialized = true
@@ -551,7 +553,7 @@ func (d *DVault) CreateMount(_ context.Context, path string, mount CreateMount) 
 }
 
 func (d *DVault) generateAndSaveEncryptKey(secret []byte, shares uint, threshold uint) (tools.Encryptor, error) {
-	encryptKey := make([]byte, 256)
+	encryptKey := make([]byte, 32)
 	_, err := rand.Read(encryptKey)
 	if err != nil {
 		return nil, err
@@ -723,7 +725,7 @@ func (d *DVault) restoreKey(rootKey []byte) (tools.Encryptor, error) {
 func (d *DVault) restoreKV(encryptor tools.Encryptor) error {
 	dataPath := filepath.Join(d.mountPath, "data")
 	dirEntries, err := os.ReadDir(dataPath)
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
 
