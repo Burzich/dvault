@@ -13,8 +13,9 @@ jobs:
       DB: "${{ secrets.DB }}"
       CONTAINER_NAME: "handle_vault"
       IMAGE_NAME: "handle_vault_image"
-      MOUNT_PATH: "/tmp/"
+      MOUNT_PATH: "/tmp/dvault/"
       CERT_PATH: "${{ secrets.CERT_PATH }}"
+      CERT_PATH_CONTAINER: "${{ secrets.CERT_PATH_CONTAINER }}"
     steps:
       - name: Check for actual
         uses: actions/checkout@v4
@@ -43,8 +44,11 @@ jobs:
           -d
           --env PORT=:${{ env.PORT }}
           --env DB=${{ env.DB }}
-          --env MOUNT_PATH=${{ env.MOUNT_PATH }}
+          --env MOUNT_PATH="/tmp/"
           --env CERT_PATH=${{ env.CERT_PATH }}
+          --env CERT_PATH_CONTAINER=${{ env.CERT_PATH_CONTAINER }}
+          -v ${{ env.CERT_PATH }}:${{ env.CERT_PATH_CONTAINER }}
+          -v ${{ env.MOUNT_PATH }}:/tmp/
           ${{ env.IMAGE_NAME }}
       - name: Perform cleanup
         run: docker system prune -f
