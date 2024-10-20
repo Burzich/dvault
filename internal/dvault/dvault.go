@@ -240,6 +240,7 @@ func (d *DVault) Mounts(_ context.Context) (Mounts, error) {
 	defer d.mu.Unlock()
 
 	m := Mounts{}
+	m.Data = make(map[string]MountData)
 	m.RequestId = tools.GenerateXRequestID()
 
 	if d.isSealed {

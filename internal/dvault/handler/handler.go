@@ -392,14 +392,13 @@ func (h Handler) Init(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) GetMounts(w http.ResponseWriter, r *http.Request) {
-	_, err := h.dVault.SealStatus(r.Context())
+	response, err := h.dVault.Mounts(r.Context())
 	if err != nil {
 		h.handleError(w, r, err)
 		return
 	}
 
-	var sealStatus SealStatusResponse
-	if err := json.NewEncoder(w).Encode(sealStatus); err != nil {
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

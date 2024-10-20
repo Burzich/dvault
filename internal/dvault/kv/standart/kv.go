@@ -373,7 +373,7 @@ func (k *KV) readData(secretPath string) (Data, error) {
 	}
 
 	var data Data
-	err = json.Unmarshal(b, &decryptedData)
+	err = json.Unmarshal(decryptedData, &data)
 	if err != nil {
 		return Data{}, err
 	}
