@@ -14,18 +14,19 @@ import (
 	"github.com/Burzich/dvault/internal/config"
 	"github.com/Burzich/dvault/internal/dvault"
 	"github.com/Burzich/dvault/internal/dvault/handler"
+	fs "github.com/Burzich/dvault/internal/dvault/storage/disc"
 	"github.com/Burzich/dvault/internal/server"
 )
 
 func main() {
-	cfg, err := config.ReadEnv()
+	cfg, err := config.Default()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 
-	vault, err := dvault.NewDVault(logger, cfg.Dvault)
+	vault, err := dvault.NewDVault(logger, cfg.Dvault, fs.NewFSStorage(cfg.MountPath))
 	if err != nil {
 		logger.Error(err.Error())
 		return

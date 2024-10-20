@@ -31,7 +31,6 @@ func NewServer(addr string, h DVaultHandler) *Server {
 
 			r.Get("/data/{path}", h.GetKVSecret)
 			r.Post("/data/{path}", h.CreateKVSecret)
-			r.Put("/data/{path}", h.UpdateKVSecret)
 			r.Delete("/data/{path}", h.DeleteLatestKVSecret)
 
 			r.Post("/delete/{path}", h.DeleteKVSecret)
@@ -67,15 +66,6 @@ func NewServer(addr string, h DVaultHandler) *Server {
 			r.Post("/roles/{role_name}", h.CreateRoleByNameToken)
 			r.Delete("/roles/{role_name}", h.DeleteRoleByNameToken)
 			r.Post("/tidy", h.TidyToken)
-		})
-
-		r.Route("/sys/tools", func(r chi.Router) {
-			r.Post("/hash", nil)
-			r.Post("/hash/{urlalgorithm}", nil)
-			r.Post("/random", nil)
-			r.Post("/random/{source}", nil)
-			r.Post("/random/{source}/{urlbytes}", nil)
-			r.Post("/random/{urlbytes}", nil)
 		})
 
 		r.Route("/sys", func(r chi.Router) {

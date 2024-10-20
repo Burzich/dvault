@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type KVRecord struct {
+type Record struct {
 	Data     map[string]interface{} `json:"data"`
 	Metadata struct {
 		CreatedTime    time.Time   `json:"created_time"`
@@ -17,13 +17,13 @@ type KVRecord struct {
 	} `json:"metadata"`
 }
 
-type KVConfig struct {
+type Config struct {
 	CasRequired        bool   `json:"cas_required"`
 	DeleteVersionAfter string `json:"delete_version_after"`
 	MaxVersions        int    `json:"max_versions"`
 }
 
-type KVMeta struct {
+type Meta struct {
 	CasRequired        bool                   `json:"cas_required"`
 	CreatedTime        time.Time              `json:"created_time"`
 	CurrentVersion     int                    `json:"current_version"`
@@ -40,24 +40,23 @@ type KVMeta struct {
 }
 
 type KV interface {
-	Get(ctx context.Context, secretPath string) (KVRecord, error)
-	GetVersion(ctx context.Context, secretPath string, version int) (KVRecord, error)
+	Get(ctx context.Context, secretPath string) (Record, error)
+	GetVersion(ctx context.Context, secretPath string, version int) (Record, error)
 	Save(ctx context.Context, secretPath string, data map[string]interface{}, cas int) error
-	Update(ctx context.Context, secretPath string, data map[string]interface{}) error
 	Delete(ctx context.Context, secretPath string) error
 	Undelete(ctx context.Context, secretPath string) error
 	DeleteVersion(ctx context.Context, secretPath string, version []int) error
 	UndeleteVersion(ctx context.Context, secretPath string, version int) error
 	Destroy(ctx context.Context, secretPath string, version []int) error
 
-	UpdateConfig(ctx context.Context, config KVConfig) error
-	GetConfig(ctx context.Context) (KVConfig, error)
-	GetMeta(ctx context.Context, secretPath string) (KVMeta, error)
-	UpdateMeta(ctx context.Context, secretPath string, meta KVMeta) error
+	UpdateConfig(ctx context.Context, config Config) error
+	GetConfig(ctx context.Context) (Config, error)
+	GetMeta(ctx context.Context, secretPath string) (Meta, error)
+	UpdateMeta(ctx context.Context, secretPath string, meta Meta) error
 	DeleteMeta(ctx context.Context, secretPath string) error
 }
 
-func CreateConfigFromMap(m map[string]interface{}) (KVConfig, error) {
+func CreateConfigFromMap(m map[string]interface{}) (Config, error) {
 	casRequired := false
 	deleteVersionAfter := ""
 	maxVersions := 0
@@ -65,7 +64,7 @@ func CreateConfigFromMap(m map[string]interface{}) (KVConfig, error) {
 	if _, ok := m["casRequired"]; ok {
 		v, ok := m["casRequired"].(bool)
 		if !ok {
-			return KVConfig{}, errors.New("casRequired must be a bool")
+			return Config{}, errors.New("casRequired must be a bool")
 		}
 		casRequired = v
 	}
@@ -73,7 +72,7 @@ func CreateConfigFromMap(m map[string]interface{}) (KVConfig, error) {
 	if _, ok := m["deleteVersionAfter"]; ok {
 		v, ok := m["deleteVersionAfter"].(string)
 		if !ok {
-			return KVConfig{}, errors.New("deleteVersionAfter must be a string")
+			return Config{}, errors.New("deleteVersionAfter must be a string")
 		}
 		deleteVersionAfter = v
 	}
@@ -81,12 +80,12 @@ func CreateConfigFromMap(m map[string]interface{}) (KVConfig, error) {
 	if _, ok := m["maxVersions"]; ok {
 		v, ok := m["maxVersions"].(int)
 		if !ok {
-			return KVConfig{}, errors.New("maxVersions must be an integer")
+			return Config{}, errors.New("maxVersions must be an integer")
 		}
 		maxVersions = v
 	}
 
-	return KVConfig{
+	return Config{
 		CasRequired:        casRequired,
 		DeleteVersionAfter: deleteVersionAfter,
 		MaxVersions:        maxVersions,

@@ -9,7 +9,6 @@ type DVaultHandler interface {
 	UpdateKVConfig(w http.ResponseWriter, r *http.Request)
 	GetKVSecret(w http.ResponseWriter, r *http.Request)
 	CreateKVSecret(w http.ResponseWriter, r *http.Request)
-	UpdateKVSecret(w http.ResponseWriter, r *http.Request)
 	DeleteLatestKVSecret(w http.ResponseWriter, r *http.Request)
 	DeleteKVSecret(w http.ResponseWriter, r *http.Request)
 	DestroyKVSecret(w http.ResponseWriter, r *http.Request)

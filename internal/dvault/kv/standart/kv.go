@@ -1,46 +1,35 @@
-package disc
+package standart
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"os"
 	"path/filepath"
 	"slices"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/Burzich/dvault/internal/dvault/kv"
+	"github.com/Burzich/dvault/internal/dvault/storage"
 	"github.com/Burzich/dvault/internal/tools"
 )
 
 type KV struct {
 	configPath string
 	dataPath   string
+	storage    storage.Storage
 	encryptor  tools.Encryptor
-	m          sync.Mutex
 }
 
-func NewKV(configPath string, dataPath string, config kv.KVConfig, encryptor tools.Encryptor) (*KV, error) {
+func NewKV(configPath string, dataPath string, config kv.Config, storage storage.Storage, encryptor tools.Encryptor) (*KV, error) {
 	k := KV{
 		configPath: configPath,
 		dataPath:   dataPath,
+		storage:    storage,
 		encryptor:  encryptor,
 	}
 
-	err := os.MkdirAll(k.dataPath, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-
-	err = os.MkdirAll(k.configPath, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-
-	err = k.writeConfig(config)
+	err := k.writeConfig(config)
 	if err != nil {
 		return nil, err
 	}
@@ -48,10 +37,11 @@ func NewKV(configPath string, dataPath string, config kv.KVConfig, encryptor too
 	return &k, nil
 }
 
-func RestoreKV(configPath string, dataPath string, encryptor tools.Encryptor) (*KV, error) {
+func RestoreKV(configPath string, dataPath string, s storage.Storage, encryptor tools.Encryptor) (*KV, error) {
 	k := KV{
 		configPath: configPath,
 		dataPath:   dataPath,
+		storage:    s,
 		encryptor:  encryptor,
 	}
 
@@ -59,13 +49,10 @@ func RestoreKV(configPath string, dataPath string, encryptor tools.Encryptor) (*
 }
 
 func (k *KV) Save(_ context.Context, secretPath string, data map[string]interface{}, cas int) error {
-	k.m.Lock()
-	defer k.m.Unlock()
-
 	oldData, err := k.readData(secretPath)
-	if errors.Is(err, os.ErrNotExist) {
+	if errors.Is(err, storage.ErrPathNotFound) {
 		data := Data{
-			Records: []kv.KVRecord{
+			Records: []kv.Record{
 				{
 					Data: data,
 					Metadata: struct {
@@ -82,7 +69,7 @@ func (k *KV) Save(_ context.Context, secretPath string, data map[string]interfac
 						Version:        1,
 					}},
 			},
-			Meta: kv.KVMeta{
+			Meta: kv.Meta{
 				CasRequired:        false,
 				CreatedTime:        time.Now(),
 				CurrentVersion:     1,
@@ -100,7 +87,7 @@ func (k *KV) Save(_ context.Context, secretPath string, data map[string]interfac
 		return kv.ErrCas
 	}
 
-	oldData.Records = append(oldData.Records, kv.KVRecord{
+	oldData.Records = append(oldData.Records, kv.Record{
 		Data: data,
 		Metadata: struct {
 			CreatedTime    time.Time   `json:"created_time"`
@@ -124,85 +111,11 @@ func (k *KV) Save(_ context.Context, secretPath string, data map[string]interfac
 	return k.writeData(secretPath, oldData)
 }
 
-func (k *KV) Update(_ context.Context, secretPath string, data map[string]interface{}) error {
-	k.m.Lock()
-	defer k.m.Unlock()
-
-	oldData, err := k.readData(secretPath)
-	if errors.Is(err, os.ErrNotExist) {
-		data := Data{
-			Records: []kv.KVRecord{
-				{
-					Data: data,
-					Metadata: struct {
-						CreatedTime    time.Time   `json:"created_time"`
-						CustomMetadata interface{} `json:"custom_metadata"`
-						DeletionTime   string      `json:"deletion_time"`
-						Destroyed      bool        `json:"destroyed"`
-						Version        int         `json:"version"`
-					}{
-						CreatedTime:    time.Now(),
-						CustomMetadata: nil,
-						DeletionTime:   "",
-						Destroyed:      false,
-						Version:        1,
-					}},
-			},
-			Meta: kv.KVMeta{
-				CasRequired:        false,
-				CreatedTime:        time.Now(),
-				CurrentVersion:     1,
-				DeleteVersionAfter: "",
-				MaxVersions:        0,
-				OldestVersion:      1,
-				UpdatedTime:        time.Now(),
-			},
-		}
-
-		return k.writeData(secretPath, data)
-	}
-
-	newRecord := kv.KVRecord{
-		Data: data,
-		Metadata: struct {
-			CreatedTime    time.Time   `json:"created_time"`
-			CustomMetadata interface{} `json:"custom_metadata"`
-			DeletionTime   string      `json:"deletion_time"`
-			Destroyed      bool        `json:"destroyed"`
-			Version        int         `json:"version"`
-		}{
-			CreatedTime:    time.Now(),
-			CustomMetadata: nil,
-			DeletionTime:   "",
-			Destroyed:      false,
-			Version:        0,
-		},
-	}
-
-	oldData.Meta.UpdatedTime = time.Now()
-	for i := len(oldData.Records); i != 0; i-- {
-		record := oldData.Records[i-1]
-		if !record.Metadata.Destroyed && record.Metadata.DeletionTime == "" {
-			oldData.Records[i-1] = newRecord
-
-			return k.writeData(secretPath, oldData)
-		}
-	}
-
-	return k.writeData(secretPath, oldData)
-}
-
-func (k *KV) UpdateConfig(_ context.Context, config kv.KVConfig) error {
-	k.m.Lock()
-	defer k.m.Unlock()
-
+func (k *KV) UpdateConfig(_ context.Context, config kv.Config) error {
 	return k.writeConfig(config)
 }
 
 func (k *KV) Destroy(_ context.Context, secretPath string, versions []int) error {
-	k.m.Lock()
-	defer k.m.Unlock()
-
 	data, err := k.readData(secretPath)
 	if err != nil {
 		return err
@@ -222,20 +135,14 @@ func (k *KV) Destroy(_ context.Context, secretPath string, versions []int) error
 	return kv.ErrVersionNotFound
 }
 
-func (k *KV) GetConfig(_ context.Context) (kv.KVConfig, error) {
-	k.m.Lock()
-	defer k.m.Unlock()
-
+func (k *KV) GetConfig(_ context.Context) (kv.Config, error) {
 	return k.readConfig()
 }
 
-func (k *KV) GetMeta(_ context.Context, secretPath string) (kv.KVMeta, error) {
-	k.m.Lock()
-	defer k.m.Unlock()
-
+func (k *KV) GetMeta(_ context.Context, secretPath string) (kv.Meta, error) {
 	data, err := k.readData(secretPath)
 	if err != nil {
-		return kv.KVMeta{}, nil
+		return kv.Meta{}, nil
 	}
 
 	for i, record := range data.Records {
@@ -253,10 +160,7 @@ func (k *KV) GetMeta(_ context.Context, secretPath string) (kv.KVMeta, error) {
 	return data.Meta, nil
 }
 
-func (k *KV) UpdateMeta(_ context.Context, secretPath string, meta kv.KVMeta) error {
-	k.m.Lock()
-	defer k.m.Unlock()
-
+func (k *KV) UpdateMeta(_ context.Context, secretPath string, meta kv.Meta) error {
 	data, err := k.readData(secretPath)
 	if err != nil {
 		return err
@@ -271,16 +175,10 @@ func (k *KV) UpdateMeta(_ context.Context, secretPath string, meta kv.KVMeta) er
 }
 
 func (k *KV) DeleteMeta(_ context.Context, secretPath string) error {
-	k.m.Lock()
-	defer k.m.Unlock()
-
 	return k.deleteData(secretPath)
 }
 
 func (k *KV) UndeleteVersion(_ context.Context, secretPath string, version int) error {
-	k.m.Lock()
-	defer k.m.Unlock()
-
 	data, err := k.readData(secretPath)
 	if err != nil {
 		return err
@@ -300,9 +198,6 @@ func (k *KV) UndeleteVersion(_ context.Context, secretPath string, version int) 
 }
 
 func (k *KV) DeleteVersion(_ context.Context, secretPath string, versions []int) error {
-	k.m.Lock()
-	defer k.m.Unlock()
-
 	data, err := k.readData(secretPath)
 	if err != nil {
 		return err
@@ -322,9 +217,6 @@ func (k *KV) DeleteVersion(_ context.Context, secretPath string, versions []int)
 }
 
 func (k *KV) Undelete(_ context.Context, secretPath string) error {
-	k.m.Lock()
-	defer k.m.Unlock()
-
 	data, err := k.readData(secretPath)
 	if err != nil {
 		return err
@@ -344,9 +236,6 @@ func (k *KV) Undelete(_ context.Context, secretPath string) error {
 }
 
 func (k *KV) Delete(_ context.Context, secretPath string) error {
-	k.m.Lock()
-	defer k.m.Unlock()
-
 	data, err := k.readData(secretPath)
 	if err != nil {
 		return err
@@ -365,13 +254,10 @@ func (k *KV) Delete(_ context.Context, secretPath string) error {
 	return kv.ErrPathNotFound
 }
 
-func (k *KV) Get(_ context.Context, secretPath string) (kv.KVRecord, error) {
-	k.m.Lock()
-	defer k.m.Unlock()
-
+func (k *KV) Get(_ context.Context, secretPath string) (kv.Record, error) {
 	data, err := k.readData(secretPath)
 	if err != nil {
-		return kv.KVRecord{}, err
+		return kv.Record{}, err
 	}
 
 	for i := len(data.Records); i != 0; i-- {
@@ -382,24 +268,21 @@ func (k *KV) Get(_ context.Context, secretPath string) (kv.KVRecord, error) {
 		}
 	}
 
-	return kv.KVRecord{}, kv.ErrPathNotFound
+	return kv.Record{}, kv.ErrPathNotFound
 }
 
-func (k *KV) GetVersion(_ context.Context, secretPath string, version int) (kv.KVRecord, error) {
-	k.m.Lock()
-	defer k.m.Unlock()
-
+func (k *KV) GetVersion(_ context.Context, secretPath string, version int) (kv.Record, error) {
 	data, err := k.readData(secretPath)
 	if err != nil {
-		return kv.KVRecord{}, err
+		return kv.Record{}, err
 	}
 
-	index := slices.IndexFunc(data.Records, func(record kv.KVRecord) bool {
+	index := slices.IndexFunc(data.Records, func(record kv.Record) bool {
 		return record.Metadata.Version == version && record.Metadata.DeletionTime == "" && !record.Metadata.Destroyed
 	})
 
 	if index == -1 {
-		return kv.KVRecord{}, kv.ErrVersionNotFound
+		return kv.Record{}, kv.ErrVersionNotFound
 	}
 
 	record := data.Records[index]
@@ -408,9 +291,6 @@ func (k *KV) GetVersion(_ context.Context, secretPath string, version int) (kv.K
 }
 
 func (k *KV) DestroyKV(_ context.Context) error {
-	k.m.Lock()
-	defer k.m.Unlock()
-
 	err := k.deleteConfig()
 	if err != nil {
 		return err
@@ -424,44 +304,51 @@ func (k *KV) DestroyKV(_ context.Context) error {
 	return nil
 }
 
-func (k *KV) readConfig() (kv.KVConfig, error) {
-	pathEncoded := base64.StdEncoding.EncodeToString([]byte("config"))
-	p := filepath.Join(k.configPath, pathEncoded)
+func (k *KV) readConfig() (kv.Config, error) {
+	p := filepath.Join(k.configPath, "config")
 
-	b, err := os.ReadFile(p)
-	if errors.Is(err, os.ErrNotExist) {
-		return kv.KVConfig{}, kv.ErrPathNotFound
+	b, err := k.storage.Get(context.Background(), p)
+	if errors.Is(err, storage.ErrPathNotFound) {
+		return kv.Config{}, kv.ErrPathNotFound
 	}
 	if err != nil {
-		return kv.KVConfig{}, err
+		return kv.Config{}, err
 	}
 
-	var data kv.KVConfig
-	err = json.Unmarshal(b, &data)
+	decryptedData, err := k.encryptor.Decrypt(b)
 	if err != nil {
-		return kv.KVConfig{}, err
+		return kv.Config{}, err
+	}
+
+	var data kv.Config
+	err = json.Unmarshal(decryptedData, &data)
+	if err != nil {
+		return kv.Config{}, err
 	}
 
 	return data, nil
 }
 
 func (k *KV) deleteConfig() error {
-	pathEncoded := base64.StdEncoding.EncodeToString([]byte("config"))
-	p := filepath.Join(k.configPath, pathEncoded)
+	p := filepath.Join(k.configPath, "config")
 
-	return os.Remove(p)
+	return k.Delete(context.Background(), p)
 }
 
-func (k *KV) writeConfig(data kv.KVConfig) error {
-	pathEncoded := base64.StdEncoding.EncodeToString([]byte("config"))
-	p := filepath.Join(k.configPath, pathEncoded)
+func (k *KV) writeConfig(data kv.Config) error {
+	p := filepath.Join(k.configPath, "config")
 
 	d, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(p, d, 0644)
+	d, err = k.encryptor.Encrypt(d)
+	if err != nil {
+		return err
+	}
+
+	err = k.storage.Put(context.Background(), p, d)
 	if err != nil {
 		return err
 	}
@@ -470,11 +357,10 @@ func (k *KV) writeConfig(data kv.KVConfig) error {
 }
 
 func (k *KV) readData(secretPath string) (Data, error) {
-	pathEncoded := base64.StdEncoding.EncodeToString([]byte(secretPath))
-	p := filepath.Join(k.dataPath, pathEncoded)
+	p := filepath.Join(k.dataPath, secretPath)
 
-	b, err := os.ReadFile(p)
-	if errors.Is(err, os.ErrNotExist) {
+	b, err := k.storage.Get(context.Background(), p)
+	if errors.Is(err, storage.ErrPathNotFound) {
 		return Data{}, kv.ErrPathNotFound
 	}
 	if err != nil {
@@ -496,20 +382,16 @@ func (k *KV) readData(secretPath string) (Data, error) {
 }
 
 func (k *KV) deleteData(secretPath string) error {
-	pathEncoded := base64.StdEncoding.EncodeToString([]byte(secretPath))
-	p := filepath.Join(k.dataPath, pathEncoded)
+	p := filepath.Join(k.dataPath, secretPath)
 
-	return os.Remove(p)
+	return k.storage.Delete(context.Background(), p)
 }
 
 func (k *KV) deleteAllData() error {
-	return os.Remove(k.dataPath)
+	return k.storage.Delete(context.Background(), k.dataPath)
 }
 
 func (k *KV) writeData(secretPath string, data Data) error {
-	pathEncoded := base64.StdEncoding.EncodeToString([]byte(secretPath))
-	p := filepath.Join(k.dataPath, pathEncoded)
-
 	d, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -520,7 +402,7 @@ func (k *KV) writeData(secretPath string, data Data) error {
 		return err
 	}
 
-	err = os.WriteFile(p, encryptedData, 0644)
+	err = k.storage.Put(context.Background(), filepath.Join(k.dataPath, secretPath), encryptedData)
 	if err != nil {
 		return err
 	}

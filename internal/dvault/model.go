@@ -84,3 +84,38 @@ type CreateMount struct {
 	SealWrap              bool                   `json:"seal_wrap"`
 	Type                  string                 `json:"type"`
 }
+
+type Mounts struct {
+	RequestId     string               `json:"request_id"`
+	LeaseId       string               `json:"lease_id"`
+	Renewable     bool                 `json:"renewable"`
+	LeaseDuration int                  `json:"lease_duration"`
+	Data          map[string]MountData `json:"data"`
+	WrapInfo      interface{}          `json:"wrap_info"`
+	Warnings      interface{}          `json:"warnings"`
+	Auth          interface{}          `json:"auth"`
+	MountType     string               `json:"mount_type"`
+}
+
+type MountData struct {
+	Accessor string `json:"accessor"`
+	Config   struct {
+		DefaultLeaseTtl   int    `json:"default_lease_ttl"`
+		ForceNoCache      bool   `json:"force_no_cache"`
+		ListingVisibility string `json:"listing_visibility"`
+		MaxLeaseTtl       int    `json:"max_lease_ttl"`
+	} `json:"config"`
+	DeprecationStatus     string `json:"deprecation_status"`
+	Description           string `json:"description"`
+	ExternalEntropyAccess bool   `json:"external_entropy_access"`
+	Local                 bool   `json:"local"`
+	Options               struct {
+		Version string `json:"version"`
+	} `json:"options"`
+	PluginVersion        string `json:"plugin_version"`
+	RunningPluginVersion string `json:"running_plugin_version"`
+	RunningSha256        string `json:"running_sha256"`
+	SealWrap             bool   `json:"seal_wrap"`
+	Type                 string `json:"type"`
+	Uuid                 string `json:"uuid"`
+}

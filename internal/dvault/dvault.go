@@ -17,7 +17,8 @@ import (
 
 	"github.com/Burzich/dvault/internal/config"
 	kv2 "github.com/Burzich/dvault/internal/dvault/kv"
-	"github.com/Burzich/dvault/internal/dvault/kv/disc"
+	"github.com/Burzich/dvault/internal/dvault/kv/standart"
+	"github.com/Burzich/dvault/internal/dvault/storage"
 	"github.com/Burzich/dvault/internal/tools"
 	"github.com/cloudflare/circl/group"
 	"github.com/cloudflare/circl/secretsharing"
@@ -35,6 +36,7 @@ type DVault struct {
 	mu sync.RWMutex
 
 	encryptor tools.Encryptor
+	Storage   storage.Storage
 
 	kv        map[string]kv2.KV
 	shareKeys []string
@@ -42,7 +44,7 @@ type DVault struct {
 	T         int
 }
 
-func NewDVault(logger *slog.Logger, dvault config.Dvault) (*DVault, error) {
+func NewDVault(logger *slog.Logger, dvault config.Dvault, storage storage.Storage) (*DVault, error) {
 	d := DVault{
 		logger:           logger,
 		mountPath:        dvault.MountPath,
@@ -55,6 +57,7 @@ func NewDVault(logger *slog.Logger, dvault config.Dvault) (*DVault, error) {
 		shareKeys:        nil,
 		N:                0,
 		T:                0,
+		Storage:          storage,
 	}
 
 	err := d.tryInitVault()
@@ -232,9 +235,52 @@ func (d *DVault) SealStatus(ctx context.Context) (SealStatus, error) {
 	}, nil
 }
 
+func (d *DVault) Mounts(_ context.Context) (Mounts, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	m := Mounts{}
+	m.RequestId = tools.GenerateXRequestID()
+
+	if d.isSealed {
+		return Mounts{}, errors.New("vault is sealed")
+	}
+
+	for k := range d.kv {
+		m.Data[k] = MountData{
+			Accessor: "",
+			Config: struct {
+				DefaultLeaseTtl   int    `json:"default_lease_ttl"`
+				ForceNoCache      bool   `json:"force_no_cache"`
+				ListingVisibility string `json:"listing_visibility"`
+				MaxLeaseTtl       int    `json:"max_lease_ttl"`
+			}{},
+			DeprecationStatus:     "",
+			Description:           "",
+			ExternalEntropyAccess: false,
+			Local:                 false,
+			Options: struct {
+				Version string `json:"version"`
+			}{},
+			PluginVersion:        "",
+			RunningPluginVersion: "",
+			RunningSha256:        "",
+			SealWrap:             false,
+			Type:                 "kv",
+			Uuid:                 "",
+		}
+	}
+
+	return m, nil
+}
+
 func (d *DVault) GetKVSecret(ctx context.Context, mount string, secretPath string) (Response, error) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
+
+	if d.isSealed {
+		return Response{}, errors.New("vault is sealed")
+	}
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -257,6 +303,10 @@ func (d *DVault) GetKVSecretByVersion(ctx context.Context, mount string, secretP
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
+	if d.isSealed {
+		return Response{}, errors.New("vault is sealed")
+	}
+
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
 	}
@@ -278,6 +328,10 @@ func (d *DVault) SaveKVSecret(ctx context.Context, mount string, secretPath stri
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
+	if d.isSealed {
+		return Response{}, errors.New("vault is sealed")
+	}
+
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
 	}
@@ -295,30 +349,13 @@ func (d *DVault) SaveKVSecret(ctx context.Context, mount string, secretPath stri
 	return response, nil
 }
 
-func (d *DVault) UpdateKVSecret(ctx context.Context, mount string, secretPath string, data map[string]interface{}) (Response, error) {
-	d.mu.RLock()
-	defer d.mu.RUnlock()
-
-	if _, ok := d.kv[mount]; !ok {
-		return Response{}, fmt.Errorf("kv %s does not exist", mount)
-	}
-
-	err := d.kv[mount].Update(ctx, secretPath, data)
-	if err != nil {
-		return Response{}, err
-	}
-
-	var response Response
-	response.Data = data
-	response.MountType = "kv"
-	response.RequestId = tools.GenerateXRequestID()
-
-	return response, nil
-}
-
 func (d *DVault) DeleteKVSecret(ctx context.Context, mount string, secretPath string) (Response, error) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
+
+	if d.isSealed {
+		return Response{}, errors.New("vault is sealed")
+	}
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -340,6 +377,10 @@ func (d *DVault) UndeleteKVSecret(ctx context.Context, mount string, secretPath 
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
+	if d.isSealed {
+		return Response{}, errors.New("vault is sealed")
+	}
+
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
 	}
@@ -359,6 +400,10 @@ func (d *DVault) UndeleteKVSecret(ctx context.Context, mount string, secretPath 
 func (d *DVault) DeleteKVSecretByVersion(ctx context.Context, mount string, secretPath string, version []int) (Response, error) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
+
+	if d.isSealed {
+		return Response{}, errors.New("vault is sealed")
+	}
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -380,6 +425,10 @@ func (d *DVault) UndeleteKVSecretByVersion(ctx context.Context, mount string, se
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
+	if d.isSealed {
+		return Response{}, errors.New("vault is sealed")
+	}
+
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
 	}
@@ -400,6 +449,10 @@ func (d *DVault) DestroyKVSecret(ctx context.Context, mount string, secretPath s
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
+	if d.isSealed {
+		return Response{}, errors.New("vault is sealed")
+	}
+
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
 	}
@@ -416,9 +469,13 @@ func (d *DVault) DestroyKVSecret(ctx context.Context, mount string, secretPath s
 	return response, nil
 }
 
-func (d *DVault) UpdateKVConfig(ctx context.Context, mount string, config kv2.KVConfig) (Response, error) {
+func (d *DVault) UpdateKVConfig(ctx context.Context, mount string, config kv2.Config) (Response, error) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
+
+	if d.isSealed {
+		return Response{}, errors.New("vault is sealed")
+	}
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -439,6 +496,10 @@ func (d *DVault) UpdateKVConfig(ctx context.Context, mount string, config kv2.KV
 func (d *DVault) GetKVConfig(ctx context.Context, mount string) (Response, error) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
+
+	if d.isSealed {
+		return Response{}, errors.New("vault is sealed")
+	}
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -461,6 +522,10 @@ func (d *DVault) GetKVMeta(ctx context.Context, mount string, secretPath string)
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
+	if d.isSealed {
+		return Response{}, errors.New("vault is sealed")
+	}
+
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
 	}
@@ -478,9 +543,13 @@ func (d *DVault) GetKVMeta(ctx context.Context, mount string, secretPath string)
 	return response, nil
 }
 
-func (d *DVault) UpdateKVMeta(ctx context.Context, mount string, secretPath string, meta kv2.KVMeta) (Response, error) {
+func (d *DVault) UpdateKVMeta(ctx context.Context, mount string, secretPath string, meta kv2.Meta) (Response, error) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
+
+	if d.isSealed {
+		return Response{}, errors.New("vault is sealed")
+	}
 
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
@@ -502,6 +571,10 @@ func (d *DVault) DeleteKVMeta(ctx context.Context, mount string, secretPath stri
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
+	if d.isSealed {
+		return Response{}, errors.New("vault is sealed")
+	}
+
 	if _, ok := d.kv[mount]; !ok {
 		return Response{}, fmt.Errorf("kv %s does not exist", mount)
 	}
@@ -522,6 +595,10 @@ func (d *DVault) CreateMount(_ context.Context, path string, mount CreateMount) 
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
+	if d.isSealed {
+		return Response{}, errors.New("vault is sealed")
+	}
+
 	var response Response
 	response.RequestId = tools.GenerateXRequestID()
 
@@ -541,7 +618,7 @@ func (d *DVault) CreateMount(_ context.Context, path string, mount CreateMount) 
 			return response, err
 		}
 
-		kv, err := disc.NewKV(filepath.Join(d.mountPath, path), filepath.Join(d.mountPath, "data", path), cfg, d.encryptor)
+		kv, err := standart.NewKV(filepath.Join(d.mountPath, path), filepath.Join(d.mountPath, "data", path), cfg, d.Storage, d.encryptor)
 		if err != nil {
 			return response, err
 		}
@@ -737,7 +814,7 @@ func (d *DVault) restoreKV(encryptor tools.Encryptor) error {
 			continue
 		}
 
-		kv, err := disc.RestoreKV(filepath.Join(d.mountPath, dirEntry.Name()), filepath.Join(dataPath, dirEntry.Name()), encryptor)
+		kv, err := standart.RestoreKV(filepath.Join(d.mountPath, dirEntry.Name()), filepath.Join(dataPath, dirEntry.Name()), d.Storage, encryptor)
 		if err != nil {
 			return err
 		}
