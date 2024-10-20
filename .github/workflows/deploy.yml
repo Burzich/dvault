@@ -44,9 +44,10 @@ jobs:
           -d
           --env PORT=:${{ env.PORT }}
           --env DB=${{ env.DB }}
-          --env MOUNT_PATH=${{ env.MOUNT_PATH }}
+          --env MOUNT_PATH="/tmp/"
           --env CERT_PATH=${{ env.CERT_PATH }}
-          -v ${{ env.CERT_PATH }}:${{ env.CERT_PATH }}
+          --env CERT_PATH_CONTAINER=${{ env.CERT_PATH_CONTAINER }}
+          -v ${{ env.CERT_PATH }}:${{ env.CERT_PATH_CONTAINER }}
           -v ${{ env.MOUNT_PATH }}:/tmp/
           ${{ env.IMAGE_NAME }}
       - name: Perform cleanup
