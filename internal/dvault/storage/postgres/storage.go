@@ -34,7 +34,7 @@ func NewPostgresStorage(config config.PostgresqlStorageConfig, logger *slog.Logg
 
 		caCert, err := os.ReadFile(caCertPath)
 		if err != nil {
-			log.Fatalf("Не удалось загрузить CA сертификат: %v", err)
+			log.Fatalf("Can't load ca cert: %v", err)
 		}
 
 		caCertPool := x509.NewCertPool()
@@ -42,7 +42,7 @@ func NewPostgresStorage(config config.PostgresqlStorageConfig, logger *slog.Logg
 
 		clientCert, err := tls.LoadX509KeyPair(clientCertPath, clientKeyPath)
 		if err != nil {
-			log.Fatalf("Не удалось загрузить клиентский сертификат: %v", err)
+			log.Fatalf("Can't load client cert: %v", err)
 		}
 
 		tlsConfig = &tls.Config{
