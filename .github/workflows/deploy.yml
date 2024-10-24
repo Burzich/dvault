@@ -9,14 +9,20 @@ jobs:
     runs-on: self-hosted
     timeout-minutes: 30
     env:
+      IMAGE_NAME: "handle_vault_image"
+      TAG: "latest"
+      CONTAINER_NAME: "handle_vault"
       PORT: "8080"
+      DOCKER_NETWORK: "docker_network"
+           
+      MOUNT_PATH: "/tmp/dvault/"
+
       DB: "${{ secrets.DB }}"
       DB_REDIS: "${{ secrets.DB_REDIS}}"
-      CONTAINER_NAME: "handle_vault"
-      IMAGE_NAME: "handle_vault_image"
-      MOUNT_PATH: "/tmp/dvault/"
+
       CERT_PATH: "${{ secrets.CERT_PATH }}"
       CERT_PATH_CONTAINER: "${{ secrets.CERT_PATH_CONTAINER }}"
+
       CERT_REDIS_PATH: "${{ secrets.CERT_REDIS_PATH }}"
       CERT_REDIS_PATH_CONTAINER: "${{ secrets.CERT_REDIS_PATH_CONTAINER }}"
     steps:
@@ -26,7 +32,7 @@ jobs:
       - name: Build
         run: >
           docker build
-          -t ${{ env.IMAGE_NAME }}:latest
+          -t ${{ env.IMAGE_NAME }}:${{ env.TAG }}
           --no-cache
           .
 
@@ -44,7 +50,7 @@ jobs:
           docker run
           --restart unless-stopped
           --name ${{ env.CONTAINER_NAME }}
-          --network docker_network
+          --network ${{ env.DOCKER_NETWORK }}
           -p ${{ env.PORT }}:${{ env.PORT }}
           -d
           --env PORT=:${{ env.PORT }}
@@ -55,8 +61,8 @@ jobs:
           -v ${{ env.CERT_PATH }}:${{ env.CERT_PATH_CONTAINER }}
           -v ${{ env.CERT_REDIS_PATH }}:${{ env.CERT_REDIS_PATH_CONTAINER }}
           -v ${{ env.MOUNT_PATH }}:/tmp/
-          ${{ env.IMAGE_NAME }}
-
+          ${{ env.IMAGE_NAME }}:${{ env.TAG }}
 
       - name: Perform cleanup
+        if: always()
         run: docker system prune -f
