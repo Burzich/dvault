@@ -16,14 +16,14 @@ jobs:
       DOCKER_NETWORK: "docker_network"
            
       MOUNT_PATH: "/tmp/dvault/"
-      STORAGE_TYPE: "redis"
+      STORAGE_TYPE: "postgres"
       REDIS_SSL_ENABLED: "true"
 
       DB: "${{ secrets.DB }}"
       DB_REDIS: "${{ secrets.DB_REDIS}}"
 
       CERT_PATH: "${{ secrets.CERT_PATH }}"
-      CERT_PATH_DVAULT: "${{ secrets.CERT_PATH_CONTAINER }}"
+      CERT_DB_PATH_DVAULT: "${{ secrets.CERT_PATH_CONTAINER }}"
 
       CERT_REDIS_PATH: "${{ secrets.CERT_REDIS_PATH }}"
       CERT_REDIS_PATH_DVAULT: "${{ secrets.CERT_REDIS_PATH_CONTAINER }}"
@@ -60,9 +60,9 @@ jobs:
           --env DB_REDIS=${{ env.DB_REDIS }}
           --env MOUNT_PATH="/tmp/"
           --env STORAGE_TYPE=${{ env.STORAGE_TYPE }}
-          --env CERT_PATH_DVAULT=${{ env.CERT_PATH_DVAULT }}
+          --env CERT_DB_PATH_DVAULT=${{ env.CERT_DB_PATH_DVAULT }}
           --env CERT_REDIS_PATH_DVAULT=${{ env.CERT_REDIS_PATH_DVAULT }}
-          -v ${{ env.CERT_PATH }}:${{ env.CERT_PATH_DVAULT }}
+          -v ${{ env.CERT_PATH }}:${{ env.CERT_DB_PATH_DVAULT }}
           -v ${{ env.CERT_REDIS_PATH }}:${{ env.CERT_REDIS_PATH_DVAULT }}
           -v ${{ env.MOUNT_PATH }}:/tmp/
           ${{ env.IMAGE_NAME }}:${{ env.TAG }}
