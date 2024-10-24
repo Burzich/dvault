@@ -11,6 +11,7 @@ jobs:
     env:
       PORT: "8080"
       DB: "${{ secrets.DB }}"
+      DB_REDIS: "${{ secrets.DB_REDIS}}"
       CONTAINER_NAME: "handle_vault"
       IMAGE_NAME: "handle_vault_image"
       MOUNT_PATH: "/tmp/dvault/"
