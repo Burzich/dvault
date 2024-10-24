@@ -77,7 +77,7 @@ func ReadEnv() (Config, error) {
 	}
 
 	switch cfg.StorageType {
-	case "postgresql":
+	case "postgres":
 		var pgcfg PostgresqlStorageConfig
 
 		if err := cleanenv.ReadEnv(&pgcfg); err != nil {
