@@ -36,6 +36,16 @@ jobs:
           docker container rm ${{ env.CONTAINER_NAME }};
           else echo "Container ${{ env.CONTAINER_NAME }} does not exist";
           fi
+
+      - name: fake test
+        run: >
+          echo "--env CERT_PATH_CONTAINER=${{ env.CERT_PATH_CONTAINER }}
+          --env CERT_REDIS_PATH_CONTAINER=${{ env.CERT_REDIS_PATH_CONTAINER }}
+          -v ${{ env.CERT_PATH }}:${{ env.CERT_PATH_CONTAINER }}
+          -v ${{ env.CERT_REDIS_PATH }}:${{ env.CERT_REDIS_PATH_CONTAINER }}"
+          >> debug.txt
+
+
       - name: Run container
         run: >
           docker run
