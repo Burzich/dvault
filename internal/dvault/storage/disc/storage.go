@@ -65,3 +65,24 @@ func (f Storage) Delete(_ context.Context, path string) error {
 
 	return nil
 }
+
+func (f Storage) List(_ context.Context, path string) ([]string, error) {
+	p := filepath.Join(f.mountPoint, path)
+
+	entries, err := os.ReadDir(p)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var dirs []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			dirs = append(dirs, entry.Name())
+		}
+	}
+
+	return dirs, nil
+}

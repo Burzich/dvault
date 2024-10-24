@@ -28,7 +28,7 @@ func Default() (Config, error) {
 		LoggerLevel: "DEBUG",
 		Server:      Server{Addr: ":8080"},
 		Dvault: Dvault{
-			MountPath:        "./data",
+			MountPath:        "C:\\Users\\timer\\GolandProjects\\dvault\\data",
 			EncryptionMethod: "chacha20-poly1305",
 		},
 	}, nil

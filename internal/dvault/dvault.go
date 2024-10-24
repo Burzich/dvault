@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -176,6 +175,7 @@ func (d *DVault) Init(_ context.Context, init Init) (InitResponse, error) {
 	}
 
 	var sharesValuesBase64 []string
+	var sharesValuesBase64Base64 []string
 
 	for _, share := range shares {
 		shareValueBytes, err := share.Value.MarshalBinary()
@@ -190,6 +190,7 @@ func (d *DVault) Init(_ context.Context, init Init) (InitResponse, error) {
 		shareValueBase64 := base64.StdEncoding.EncodeToString(shareValueBytes)
 		shareIdBase64 := base64.StdEncoding.EncodeToString(shareIdBytes)
 		sharesValuesBase64 = append(sharesValuesBase64, shareValueBase64+"#"+shareIdBase64)
+		sharesValuesBase64Base64 = append(sharesValuesBase64Base64, base64.StdEncoding.EncodeToString([]byte(shareValueBase64+"#"+shareIdBase64)))
 	}
 
 	secretBytes, err := secret.MarshalBinary()
@@ -208,7 +209,7 @@ func (d *DVault) Init(_ context.Context, init Init) (InitResponse, error) {
 
 	return InitResponse{
 		Keys:       sharesValuesBase64,
-		KeysBase64: sharesValuesBase64,
+		KeysBase64: sharesValuesBase64Base64,
 		RootToken:  base64.StdEncoding.EncodeToString(secretBytes),
 	}, nil
 }
@@ -619,7 +620,7 @@ func (d *DVault) CreateMount(_ context.Context, path string, mount CreateMount) 
 			return response, err
 		}
 
-		kv, err := standart.NewKV(filepath.Join(d.mountPath, path), filepath.Join(d.mountPath, "data", path), cfg, d.Storage, d.encryptor)
+		kv, err := standart.NewKV(path, filepath.Join("data", path), cfg, d.Storage, d.encryptor)
 		if err != nil {
 			return response, err
 		}
@@ -651,9 +652,8 @@ func (d *DVault) generateAndSaveEncryptKey(secret []byte, shares uint, threshold
 	}
 
 	encryptedEncryptedKeyBase64 := base64.StdEncoding.EncodeToString(encryptedEncryptedKey)
-	keyPath := filepath.Join(d.mountPath, "key")
 
-	err = os.WriteFile(keyPath, []byte(fmt.Sprintf("%s#%d#%d", encryptedEncryptedKeyBase64, shares, threshold)), 0600)
+	err = d.Storage.Put(context.Background(), "key", []byte(fmt.Sprintf("%s#%d#%d", encryptedEncryptedKeyBase64, shares, threshold)))
 	if err != nil {
 		return nil, err
 	}
@@ -741,9 +741,8 @@ func (d *DVault) tryUnseal(keysBase64Encoded []string) (tools.Encryptor, error) 
 }
 
 func (d *DVault) tryInitVault() error {
-	keyPath := filepath.Join(d.mountPath, "key")
-	encryptionKeyBytes, err := os.ReadFile(keyPath)
-	if errors.Is(err, os.ErrNotExist) {
+	encryptionKeyBytes, err := d.Storage.Get(context.Background(), "key")
+	if errors.Is(err, kv2.ErrPathNotFound) {
 		return nil
 	}
 	if err != nil {
@@ -773,8 +772,7 @@ func (d *DVault) tryInitVault() error {
 }
 
 func (d *DVault) restoreKey(rootKey []byte) (tools.Encryptor, error) {
-	keyPath := filepath.Join(d.mountPath, "key")
-	encryptionKeyBytes, err := os.ReadFile(keyPath)
+	encryptionKeyBytes, err := d.Storage.Get(context.Background(), "key")
 	if err != nil {
 		return nil, err
 	}
@@ -804,23 +802,18 @@ func (d *DVault) restoreKey(rootKey []byte) (tools.Encryptor, error) {
 }
 
 func (d *DVault) restoreKV(encryptor tools.Encryptor) error {
-	dataPath := filepath.Join(d.mountPath, "data")
-	dirEntries, err := os.ReadDir(dataPath)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
+	dirEntries, err := d.Storage.List(context.Background(), "data")
+	if err != nil && !errors.Is(err, kv2.ErrPathNotFound) {
 		return err
 	}
 
 	for _, dirEntry := range dirEntries {
-		if !dirEntry.IsDir() {
-			continue
-		}
-
-		kv, err := standart.RestoreKV(filepath.Join(d.mountPath, dirEntry.Name()), filepath.Join(dataPath, dirEntry.Name()), d.Storage, encryptor)
+		kv, err := standart.RestoreKV(filepath.Join(d.mountPath, dirEntry), filepath.Join(d.mountPath, "data", dirEntry), d.Storage, encryptor)
 		if err != nil {
 			return err
 		}
 
-		d.kv[dirEntry.Name()] = kv
+		d.kv[dirEntry] = kv
 	}
 
 	return nil

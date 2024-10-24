@@ -6,6 +6,7 @@ import (
 	"net/http/pprof"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -23,6 +24,15 @@ func NewServer(addr string, h DVaultHandler) *Server {
 	}
 
 	r := chi.NewMux()
+
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Route("/{mount}", func(r chi.Router) {
