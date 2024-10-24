@@ -57,6 +57,7 @@ jobs:
           -d
           --env PORT=:${{ env.PORT }}
           --env DB=${{ env.DB }}
+          --env DB_REDIS=${{ env.DB_REDIS }}
           --env MOUNT_PATH="/tmp/"
           --env STORAGE_TYPE=${{ env.STORAGE_TYPE }}
           --env CERT_PATH_DVAULT=${{ env.CERT_PATH_DVAULT }}
