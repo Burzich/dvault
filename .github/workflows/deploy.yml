@@ -16,15 +16,17 @@ jobs:
       DOCKER_NETWORK: "docker_network"
            
       MOUNT_PATH: "/tmp/dvault/"
+      STORAGE_TYPE: "redis"
+      REDIS_SSL_ENABLED: "true"
 
       DB: "${{ secrets.DB }}"
       DB_REDIS: "${{ secrets.DB_REDIS}}"
 
       CERT_PATH: "${{ secrets.CERT_PATH }}"
-      CERT_PATH_CONTAINER: "${{ secrets.CERT_PATH_CONTAINER }}"
+      CERT_PATH_DVAULT: "${{ secrets.CERT_PATH_CONTAINER }}"
 
       CERT_REDIS_PATH: "${{ secrets.CERT_REDIS_PATH }}"
-      CERT_REDIS_PATH_CONTAINER: "${{ secrets.CERT_REDIS_PATH_CONTAINER }}"
+      CERT_REDIS_PATH_DVAULT: "${{ secrets.CERT_REDIS_PATH_CONTAINER }}"
     steps:
       - name: Check for actual
         uses: actions/checkout@v4
@@ -56,8 +58,8 @@ jobs:
           --env PORT=:${{ env.PORT }}
           --env DB=${{ env.DB }}
           --env MOUNT_PATH="/tmp/"
-          --env CERT_PATH_CONTAINER=${{ env.CERT_PATH_CONTAINER }}
-          --env CERT_REDIS_PATH_CONTAINER=${{ env.CERT_REDIS_PATH_CONTAINER }}
+          --env CERT_PATH_DVAULT=${{ env.CERT_PATH_CONTAINER }}
+          --env CERT_REDIS_PATH_DVAULT=${{ env.CERT_REDIS_PATH_CONTAINER }}
           -v ${{ env.CERT_PATH }}:${{ env.CERT_PATH_CONTAINER }}
           -v ${{ env.CERT_REDIS_PATH }}:${{ env.CERT_REDIS_PATH_CONTAINER }}
           -v ${{ env.MOUNT_PATH }}:/tmp/
