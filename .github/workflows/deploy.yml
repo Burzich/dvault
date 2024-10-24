@@ -28,6 +28,7 @@ jobs:
           -t ${{ env.IMAGE_NAME }}:latest
           --no-cache
           .
+
       - name: Stop previous
         run: >
           CONTAINER_EXISTS=$(docker ps -a --format '{{.Names}}' --filter "name=${{ env.CONTAINER_NAME }}" -a | wc -w);
@@ -36,15 +37,6 @@ jobs:
           docker container rm ${{ env.CONTAINER_NAME }};
           else echo "Container ${{ env.CONTAINER_NAME }} does not exist";
           fi
-
-      - name: fake test
-        run: >
-          echo "--env CERT_PATH_CONTAINER=${{ env.CERT_PATH_CONTAINER }}
-          --env CERT_REDIS_PATH_CONTAINER=${{ env.CERT_REDIS_PATH_CONTAINER }}
-          -v ${{ env.CERT_PATH }}:${{ env.CERT_PATH_CONTAINER }}
-          -v ${{ env.CERT_REDIS_PATH }}:${{ env.CERT_REDIS_PATH_CONTAINER }}"
-          >> debug.txt
-
 
       - name: Run container
         run: >
@@ -63,5 +55,7 @@ jobs:
           -v ${{ env.CERT_REDIS_PATH }}:${{ env.CERT_REDIS_PATH_CONTAINER }}
           -v ${{ env.MOUNT_PATH }}:/tmp/
           ${{ env.IMAGE_NAME }}
+
+
       - name: Perform cleanup
         run: docker system prune -f
