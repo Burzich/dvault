@@ -34,7 +34,12 @@ func NewServer(addr string, h DVaultHandler) *Server {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
+	r.Get("/v1/sys/seal-status", h.SealStatus)
+	r.Post("/v1/sys/unseal", h.Unseal)
+	r.Post("/v1/sys/init", h.Init)
+
 	r.Route("/v1", func(r chi.Router) {
+		r.Use(h.AuthMiddleware())
 		r.Route("/{mount}", func(r chi.Router) {
 			r.Get("/config", h.GetKVConfig)
 			r.Post("/config", h.UpdateKVConfig)
@@ -54,30 +59,6 @@ func NewServer(addr string, h DVaultHandler) *Server {
 			r.Post("/subkeys/{path}", h.CreateKVSubkeys)
 		})
 
-		r.Route("/auth/token", func(r chi.Router) {
-			r.Get("/accessors/", h.GetTokenAccessors)
-			r.Post("/create", h.CreateToken)
-			r.Post("/create-orphan", h.CreateOrphanToken)
-			r.Post("/create/{role_name}", h.CreateRoleToken)
-			r.Get("/lookup", h.LookupToken)
-			r.Post("/lookup", nil)
-			r.Post("/lookup-accessor", nil)
-			r.Get("/lookup-self", h.LookupToken)
-			r.Post("/lookup-self", h.LookupSelfToken)
-			r.Post("/renew", h.RenewToken)
-			r.Post("/renew-accessor", h.RenewAccessorToken)
-			r.Post("/renew-self", h.RenewSelfToken)
-			r.Post("/revoke", h.RevokeToken)
-			r.Post("/revoke-accessor", h.RevokeAccessorToken)
-			r.Post("/revoke-orphan", h.RevokeOrphanToken)
-			r.Post("/revoke-self", h.RevokeSelfToken)
-			r.Get("/roles/", h.GetRolesToken)
-			r.Get("/roles/{role_name}", h.GetRoleByNameToken)
-			r.Post("/roles/{role_name}", h.CreateRoleByNameToken)
-			r.Delete("/roles/{role_name}", h.DeleteRoleByNameToken)
-			r.Post("/tidy", h.TidyToken)
-		})
-
 		r.Route("/sys", func(r chi.Router) {
 			r.Get("/mounts", h.GetMounts)
 			r.Get("/mounts/{path}", h.GetMount)
@@ -85,9 +66,6 @@ func NewServer(addr string, h DVaultHandler) *Server {
 			r.Delete("/mounts/{path}", h.DeleteMount)
 
 			r.Post("/seal", h.Seal)
-			r.Get("/seal-status", h.SealStatus)
-			r.Post("/unseal", h.Unseal)
-			r.Post("/init", h.Init)
 			r.Get("/health", h.Health)
 
 			r.Get("/metrics", promhttp.Handler().ServeHTTP)
@@ -103,6 +81,7 @@ func NewServer(addr string, h DVaultHandler) *Server {
 			r.Handle("/pprof/block", pprof.Handler("block"))
 			r.Handle("/pprof/allocs", pprof.Handler("allocs"))
 		})
+
 	})
 
 	srv.server.Handler = r
@@ -112,6 +91,10 @@ func NewServer(addr string, h DVaultHandler) *Server {
 
 func (s *Server) ListenAndServe() error {
 	return s.server.ListenAndServe()
+}
+
+func (s *Server) ListenAndServeTLS(certFile, keyFile string) error {
+	return s.server.ListenAndServeTLS(certFile, keyFile)
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {

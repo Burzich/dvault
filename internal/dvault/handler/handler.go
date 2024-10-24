@@ -447,6 +447,26 @@ func (h Handler) Health(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (h Handler) AuthMiddleware() func(handler http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			token := r.Header.Get("X-Vault-Token")
+			if token == "" {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+
+			err := h.dVault.CheckToken(token)
+			if err != nil {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 func (h Handler) handleError(rw http.ResponseWriter, r *http.Request, err error) {
 	var b *strconv.NumError
 

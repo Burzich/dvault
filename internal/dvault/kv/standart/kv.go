@@ -145,6 +145,14 @@ func (k *KV) GetMeta(_ context.Context, secretPath string) (kv.Meta, error) {
 		return kv.Meta{}, nil
 	}
 
+	if data.Meta.Versions == nil {
+		data.Meta.Versions = make(map[string]struct {
+			CreatedTime  time.Time `json:"created_time"`
+			DeletionTime string    `json:"deletion_time"`
+			Destroyed    bool      `json:"destroyed"`
+		})
+	}
+
 	for i, record := range data.Records {
 		data.Meta.Versions[strconv.Itoa(i)] = struct {
 			CreatedTime  time.Time `json:"created_time"`

@@ -25,7 +25,6 @@ import (
 
 type DVault struct {
 	logger           *slog.Logger
-	mountPath        string
 	encryptionMethod string
 
 	buildDate     time.Time
@@ -46,7 +45,6 @@ type DVault struct {
 func NewDVault(logger *slog.Logger, dvault config.Dvault, storage storage.Storage) (*DVault, error) {
 	d := DVault{
 		logger:           logger,
-		mountPath:        dvault.MountPath,
 		encryptionMethod: dvault.EncryptionMethod,
 		buildDate:        time.Now(),
 		isSealed:         true,
@@ -801,14 +799,28 @@ func (d *DVault) restoreKey(rootKey []byte) (tools.Encryptor, error) {
 	return tools.NewEncryptor(d.encryptionMethod, encryptionKey)
 }
 
+func (d *DVault) CheckToken(token string) error {
+	secret, err := base64.StdEncoding.DecodeString(token)
+	if err != nil {
+		return err
+	}
+
+	_, err = d.restoreKey(secret)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (d *DVault) restoreKV(encryptor tools.Encryptor) error {
-	dirEntries, err := d.Storage.List(context.Background(), "data")
+	dirEntries, err := d.Storage.List(context.Background(), "")
 	if err != nil && !errors.Is(err, kv2.ErrPathNotFound) {
 		return err
 	}
 
 	for _, dirEntry := range dirEntries {
-		kv, err := standart.RestoreKV(filepath.Join(d.mountPath, dirEntry), filepath.Join(d.mountPath, "data", dirEntry), d.Storage, encryptor)
+		kv, err := standart.RestoreKV(dirEntry, filepath.Join("data", dirEntry), d.Storage, encryptor)
 		if err != nil {
 			return err
 		}

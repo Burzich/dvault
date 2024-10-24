@@ -23,6 +23,8 @@ type DVaultHandler interface {
 	CreateMount(w http.ResponseWriter, r *http.Request)
 	DeleteMount(w http.ResponseWriter, r *http.Request)
 
+	AuthMiddleware() func(handler http.Handler) http.Handler
+
 	GetTokenAccessors(w http.ResponseWriter, r *http.Request)
 	CreateToken(w http.ResponseWriter, r *http.Request)
 	CreateOrphanToken(w http.ResponseWriter, r *http.Request)

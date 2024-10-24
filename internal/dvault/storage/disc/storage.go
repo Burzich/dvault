@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Burzich/dvault/internal/config"
 	"github.com/Burzich/dvault/internal/dvault/storage"
 )
 
@@ -13,9 +14,9 @@ type Storage struct {
 	mountPoint string
 }
 
-func NewFSStorage(mountPath string) *Storage {
+func NewFSStorage(config config.FSStorageConfig) *Storage {
 	return &Storage{
-		mountPoint: mountPath,
+		mountPoint: config.MountPath,
 	}
 }
 
@@ -85,4 +86,8 @@ func (f Storage) List(_ context.Context, path string) ([]string, error) {
 	}
 
 	return dirs, nil
+}
+
+func (f Storage) Close() error {
+	return nil
 }

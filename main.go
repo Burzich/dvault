@@ -14,7 +14,7 @@ import (
 	"github.com/Burzich/dvault/internal/config"
 	"github.com/Burzich/dvault/internal/dvault"
 	"github.com/Burzich/dvault/internal/dvault/handler"
-	fs "github.com/Burzich/dvault/internal/dvault/storage/disc"
+	"github.com/Burzich/dvault/internal/dvault/storage/manager"
 	"github.com/Burzich/dvault/internal/server"
 )
 
@@ -25,8 +25,13 @@ func main() {
 	}
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	storage, err := manager.CreateStorage(cfg.StorageType, cfg.StorageConfig, logger)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer storage.Close()
 
-	vault, err := dvault.NewDVault(logger, cfg.Dvault, fs.NewFSStorage(cfg.MountPath))
+	vault, err := dvault.NewDVault(logger, cfg.Dvault, storage)
 	if err != nil {
 		logger.Error(err.Error())
 		return
@@ -51,9 +56,16 @@ func main() {
 	}()
 
 	logger.Info("starting server")
-	if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-		logger.Error("http server listen and serve", slog.String("error", err.Error()))
+	if cfg.Server.SSLEnabled {
+		if err := srv.ListenAndServeTLS(cfg.Server.CertPath, cfg.Server.KeyPath); !errors.Is(err, http.ErrServerClosed) {
+			logger.Error("http server listen and serve", slog.String("error", err.Error()))
+		}
+	} else {
+		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			logger.Error("http server listen and serve", slog.String("error", err.Error()))
+		}
 	}
+
 	<-ready
 	logger.Info("server shutdown")
 }
