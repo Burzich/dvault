@@ -27,13 +27,13 @@ type FSStorageConfig struct {
 type RedisStorageConfig struct {
 	Connection string `json:"mount_path" validate:"required" env:"DB_REDIS"`
 	SSLEnabled bool   `json:"ssl_enabled" env:"REDIS_SSL_ENABLED"`
-	CertPath   string `json:"cert_path" env:"CERT_REDIS_PATH"`
+	CertPath   string `json:"cert_path" env:"CERT_REDIS_PATH_DVAULT"`
 }
 
 type PostgresqlStorageConfig struct {
 	Connection string `json:"mount_path" validate:"required" env:"DB"`
 	SSLEnabled bool   `json:"ssl_enabled" env:"DB_SSL_ENABLED"`
-	CertPath   string `json:"cert_path" env:"CERT_DB_PATH"`
+	CertPath   string `json:"cert_path" env:"CERT_DB_PATH_DVAULT"`
 }
 
 type Server struct {
