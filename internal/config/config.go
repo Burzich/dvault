@@ -80,7 +80,7 @@ func ReadEnv() (Config, error) {
 	case "postgresql":
 		var pgcfg PostgresqlStorageConfig
 
-		if err := cleanenv.ReadEnv(&cfg); err != nil {
+		if err := cleanenv.ReadEnv(&pgcfg); err != nil {
 			return Config{}, err
 		}
 
@@ -88,7 +88,7 @@ func ReadEnv() (Config, error) {
 	case "redis":
 		var redisCfg RedisStorageConfig
 
-		if err := cleanenv.ReadEnv(&cfg); err != nil {
+		if err := cleanenv.ReadEnv(&redisCfg); err != nil {
 			return Config{}, err
 		}
 
@@ -96,7 +96,7 @@ func ReadEnv() (Config, error) {
 	case "fs":
 		var fs FSStorageConfig
 
-		if err := cleanenv.ReadEnv(&cfg); err != nil {
+		if err := cleanenv.ReadEnv(&fs); err != nil {
 			return Config{}, err
 		}
 
