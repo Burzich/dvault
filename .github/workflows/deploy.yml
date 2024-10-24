@@ -50,7 +50,7 @@ jobs:
           --env CERT_PATH_CONTAINER=${{ env.CERT_PATH_CONTAINER }}
           --env CERT_REDIS_PATH_CONTAINER=${{ env.CERT_REDIS_PATH_CONTAINER }}
           -v ${{ env.CERT_PATH }}:${{ env.CERT_PATH_CONTAINER }}
-          -v ${{ env.CERT_REDIS_PATH }}:${{ env.CERT_PATH_CONTAINER }}
+          -v ${{ env.CERT_REDIS_PATH }}:${{ env.CERT_REDIS_PATH_CONTAINER }}
           -v ${{ env.MOUNT_PATH }}:/tmp/
           ${{ env.IMAGE_NAME }}
       - name: Perform cleanup
